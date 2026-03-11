@@ -29,7 +29,7 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ── OWNER INTERSTITIAL SCREEN ── */
+    /* ââ OWNER INTERSTITIAL SCREEN ââ */
     #owner-screen {
       display: none;
       position: fixed;
@@ -109,7 +109,7 @@
       color: var(--paper);
     }
 
-    /* ── PUBLIC CARD ── */
+    /* ââ PUBLIC CARD ââ */
     #public-card {
       display: none;
       min-height: 100vh;
@@ -265,7 +265,7 @@
     }
     .claim-btn:hover { color: var(--ink); }
 
-    /* ── CLAIM MODAL ── */
+    /* ââ CLAIM MODAL ââ */
     #claim-modal {
       display: none;
       position: fixed;
@@ -415,16 +415,16 @@
     <p class="section-label">Find me online</p>
     <div class="links-grid">
       <a class="link-pill" href="https://linkedin.com/in/jonpederson" target="_blank" rel="noopener">
-        LinkedIn <span class="arrow">↗</span>
+        LinkedIn <span class="arrow">&#x2197;</span>
       </a>
       <a class="link-pill" href="https://twitter.com/jonpederson" target="_blank" rel="noopener">
-        Twitter / X <span class="arrow">↗</span>
+        Twitter / X <span class="arrow">&#x2197;</span>
       </a>
       <a class="link-pill" href="skype:jonpederson?chat" target="_blank" rel="noopener">
-        Skype <span class="arrow">↗</span>
+        Skype <span class="arrow">&#x2197;</span>
       </a>
       <a class="link-pill" href="https://gierd.com" target="_blank" rel="noopener">
-        Gierd <span class="arrow">↗</span>
+        Gierd <span class="arrow">&#x2197;</span>
       </a>
     </div>
 
@@ -434,7 +434,7 @@
         <span class="icon">vc</span>
         Save contact
       </span>
-      <span>↓</span>
+      <span>&#x2193;</span>
     </a>
 
     <div class="claim-row">
@@ -449,7 +449,7 @@
       <p class="modal-title">Owner authentication</p>
       <div class="pin-input">
         <input type="password" id="pin-field" maxlength="12"
-               placeholder="· · · · · ·"
+               placeholder="&#xB7; &#xB7; &#xB7; &#xB7; &#xB7; &#xB7;"
                onkeydown="if(event.key==='Enter') checkPin()" />
       </div>
       <div class="modal-actions">
@@ -463,16 +463,10 @@
   </div>
 
   <script>
-    // ─────────────────────────────────────────────────────────────
-    // CONFIGURATION — edit these before deploying
-    // ─────────────────────────────────────────────────────────────
     const CONFIG = {
-      pin: 'changeme',                        // ← your PIN / passphrase
+      pin: 'changeme',
       cookieName: 'jp_owner',
       cookieDays: 365,
-      // Opens Keep filtered to the "tap" label.
-      // New notes created inside this view auto-get the label.
-      // One-time setup: create a label called "tap" in Google Keep first.
       redirectUrl: 'https://keep.google.com/u/0/#label/tap',
       countdownSecs: 3,
       vcardData: `BEGIN:VCARD
@@ -489,9 +483,6 @@ X-GOOGLE-TALK:stopjon
 END:VCARD`
     };
 
-    // ─────────────────────────────────────────────────────────────
-    // Cookie helpers
-    // ─────────────────────────────────────────────────────────────
     function setCookie(name, value, days) {
       const expires = new Date(Date.now() + days * 864e5).toUTCString();
       document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax`;
@@ -503,41 +494,32 @@ END:VCARD`
       }, null);
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // Countdown + redirect
-    // ─────────────────────────────────────────────────────────────
     let countdownTimer = null;
     let redirectAborted = false;
-    const CIRCUMFERENCE = 2 * Math.PI * 32; // ~201
+    const CIRCUMFERENCE = 2 * Math.PI * 32;
 
     function startCountdown() {
       const screen = document.getElementById('owner-screen');
       const arc    = document.getElementById('ring-arc');
       const num    = document.getElementById('ring-num');
-
       redirectAborted = false;
       screen.style.display = 'flex';
       arc.style.strokeDasharray  = CIRCUMFERENCE;
       arc.style.strokeDashoffset = 0;
       num.textContent = CONFIG.countdownSecs;
-
       let remaining = CONFIG.countdownSecs;
-
       function tick() {
         if (redirectAborted) return;
         remaining--;
-
         const fraction = remaining / CONFIG.countdownSecs;
         arc.style.strokeDashoffset = CIRCUMFERENCE * (1 - fraction);
         num.textContent = remaining > 0 ? remaining : '';
-
         if (remaining <= 0) {
           if (!redirectAborted) window.location.href = CONFIG.redirectUrl;
         } else {
           countdownTimer = setTimeout(tick, 1000);
         }
       }
-
       countdownTimer = setTimeout(tick, 1000);
     }
 
@@ -548,13 +530,9 @@ END:VCARD`
       document.getElementById('public-card').style.display  = 'block';
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // On load
-    // ─────────────────────────────────────────────────────────────
     window.addEventListener('DOMContentLoaded', () => {
       const blob = new Blob([CONFIG.vcardData], { type: 'text/vcard' });
       document.getElementById('vcard-download').href = URL.createObjectURL(blob);
-
       if (getCookie(CONFIG.cookieName) === 'true') {
         startCountdown();
       } else {
@@ -562,9 +540,6 @@ END:VCARD`
       }
     });
 
-    // ─────────────────────────────────────────────────────────────
-    // Owner auth modal
-    // ─────────────────────────────────────────────────────────────
     function openModal() {
       document.getElementById('claim-modal').classList.add('open');
       setTimeout(() => document.getElementById('pin-field').focus(), 300);
