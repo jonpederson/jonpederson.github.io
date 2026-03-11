@@ -358,6 +358,74 @@
       color: var(--muted);
       letter-spacing: 0.06em;
     }
+
+    /* ── SCHEDULE NUDGE ── */
+    #schedule-nudge {
+      display: none;
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(1rem);
+      width: calc(100% - 3rem);
+      max-width: 480px;
+      background: var(--ink);
+      color: var(--paper);
+      padding: 1rem 1.25rem;
+      z-index: 200;
+      opacity: 0;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    #schedule-nudge.visible {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    #schedule-nudge.shown {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .nudge-text {
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      line-height: 1.4;
+    }
+    .nudge-text strong {
+      display: block;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-size: 0.65rem;
+      margin-bottom: 0.2rem;
+      color: rgba(245,240,232,0.6);
+    }
+    .nudge-actions { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+    .nudge-btn {
+      padding: 0.55rem 0.9rem;
+      background: var(--accent);
+      color: var(--paper);
+      border: none;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+    .nudge-btn:hover { opacity: 0.85; }
+    .nudge-dismiss {
+      background: none;
+      border: none;
+      color: rgba(245,240,232,0.4);
+      font-size: 1rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0.25rem;
+      transition: color 0.15s;
+    }
+    .nudge-dismiss:hover { color: var(--paper); }
   </style>
 </head>
 <body>
@@ -441,6 +509,20 @@
       <button class="claim-btn" onclick="openModal()">This is my tag</button>
     </div>
 
+  </div>
+
+  <!-- SCHEDULE NUDGE -->
+  <div id="schedule-nudge">
+    <div class="nudge-text">
+      <strong>Let's connect</strong>
+      Find a time to meet with Jon
+    </div>
+    <div class="nudge-actions">
+      <a class="nudge-btn" href="https://calendar.app.google/i15ReDVnfKninEQF6" target="_blank" rel="noopener">
+        Schedule &#x2197;
+      </a>
+      <button class="nudge-dismiss" onclick="dismissNudge()" aria-label="Dismiss">&#x2715;</button>
+    </div>
   </div>
 
   <!-- CLAIM MODAL -->
@@ -537,6 +619,7 @@ END:VCARD`
         startCountdown();
       } else {
         document.getElementById('public-card').style.display = 'block';
+        startNudgeTimer();
       }
     });
 
@@ -566,6 +649,23 @@ END:VCARD`
     document.getElementById('claim-modal').addEventListener('click', function(e) {
       if (e.target === this) closeModal();
     });
+
+    let nudgeTimer = null;
+    function startNudgeTimer() {
+      if (sessionStorage.getItem('nudge_dismissed')) return;
+      nudgeTimer = setTimeout(() => {
+        const nudge = document.getElementById('schedule-nudge');
+        nudge.classList.add('visible');
+        requestAnimationFrame(() => requestAnimationFrame(() => nudge.classList.add('shown')));
+      }, 10000);
+    }
+    function dismissNudge() {
+      const nudge = document.getElementById('schedule-nudge');
+      nudge.classList.remove('shown');
+      setTimeout(() => nudge.classList.remove('visible'), 300);
+      sessionStorage.setItem('nudge_dismissed', '1');
+      clearTimeout(nudgeTimer);
+    }
   </script>
 
 </body>
