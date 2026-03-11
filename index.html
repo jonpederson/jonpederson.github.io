@@ -362,48 +362,51 @@
     }
 
     /* ── SCHEDULE NUDGE ── */
-    #nudge-backdrop {
-      display: none;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 35vh;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      background: linear-gradient(to bottom, transparent 0%, rgba(245,240,232,0.35) 100%);
-      z-index: 190;
-      opacity: 0;
-      transition: opacity 0.35s ease;
-      pointer-events: none;
-    }
-    #nudge-backdrop.visible { display: block; }
-    #nudge-backdrop.shown { opacity: 1; }
-
     #schedule-nudge {
-      display: none;
-      position: fixed;
-      bottom: 1.5rem;
-      left: 50%;
-      transform: translateX(-50%) translateY(1rem);
-      width: calc(100% - 3rem);
-      max-width: 480px;
-      background: var(--ink);
-      color: var(--paper);
-      padding: 1rem 1.25rem;
-      z-index: 200;
-      opacity: 0;
-      transition: opacity 0.3s ease, transform 0.3s ease;
-    }
-    #schedule-nudge.visible {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
+      padding: 1rem 1.25rem;
+      background: var(--ink);
+      color: var(--paper);
+      margin-bottom: 0.75rem;
+      position: relative;
+      z-index: 1;
+      max-height: 8rem;
+      overflow: hidden;
+      transform-origin: center top;
+      transition:
+        transform 0.5s cubic-bezier(0.34, 1.4, 0.64, 1),
+        box-shadow 0.5s ease,
+        max-height 0.35s ease,
+        opacity 0.3s ease,
+        margin-bottom 0.35s ease,
+        padding 0.35s ease;
     }
-    #schedule-nudge.shown {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
+    #schedule-nudge.popped {
+      transform: scale(1.028) translateY(-3px);
+      box-shadow: 0 20px 56px rgba(0,0,0,0.22), 0 4px 14px rgba(0,0,0,0.13);
+      z-index: 10;
+    }
+    #schedule-nudge.dismissed {
+      max-height: 0;
+      opacity: 0;
+      margin-bottom: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      pointer-events: none;
+    }
+    /* Blur elements below nudge when it pops */
+    #schedule-nudge.popped ~ #vcard-download,
+    #schedule-nudge.popped ~ .claim-row {
+      filter: blur(2.5px);
+      transition: filter 0.45s ease;
+    }
+    #schedule-nudge:not(.popped) ~ #vcard-download,
+    #schedule-nudge:not(.popped) ~ .claim-row {
+      filter: blur(0);
+      transition: filter 0.45s ease;
     }
     .nudge-text {
       font-size: 0.72rem;
@@ -443,7 +446,13 @@
       cursor: pointer;
       line-height: 1;
       padding: 0.25rem;
-      transition: color 0.15s;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, color 0.15s;
+    }
+    #schedule-nudge.popped .nudge-dismiss {
+      opacity: 1;
+      pointer-events: auto;
     }
     .nudge-dismiss:hover { color: var(--paper); }
   </style>
@@ -516,6 +525,20 @@
       </a>
     </div>
 
+    <!-- Schedule nudge -->
+    <div id="schedule-nudge">
+      <div class="nudge-text">
+        <strong>Let's connect</strong>
+        Find a time to meet with Jon
+      </div>
+      <div class="nudge-actions">
+        <a class="nudge-btn" href="https://calendar.app.google/i15ReDVnfKninEQF6" target="_blank" rel="noopener">
+          Schedule &#x2197;
+        </a>
+        <button class="nudge-dismiss" onclick="dismissNudge()" aria-label="Dismiss">&#x2715;</button>
+      </div>
+    </div>
+
     <!-- vCard download -->
     <a id="vcard-download" class="vcard-btn" download="jon-pederson.vcf">
       <span class="btn-label">
@@ -529,21 +552,6 @@
       <button class="claim-btn" onclick="openModal()">This is my tag</button>
     </div>
 
-  </div>
-
-  <!-- SCHEDULE NUDGE -->
-  <div id="nudge-backdrop"></div>
-  <div id="schedule-nudge">
-    <div class="nudge-text">
-      <strong>Let's connect</strong>
-      Find a time to meet with Jon
-    </div>
-    <div class="nudge-actions">
-      <a class="nudge-btn" href="https://calendar.app.google/i15ReDVnfKninEQF6" target="_blank" rel="noopener">
-        Schedule &#x2197;
-      </a>
-      <button class="nudge-dismiss" onclick="dismissNudge()" aria-label="Dismiss">&#x2715;</button>
-    </div>
   </div>
 
   <!-- CLAIM MODAL -->
@@ -676,24 +684,13 @@ END:VCARD`
       if (sessionStorage.getItem('nudge_dismissed')) return;
       nudgeTimer = setTimeout(() => {
         const nudge = document.getElementById('schedule-nudge');
-        const backdrop = document.getElementById('nudge-backdrop');
-        nudge.classList.add('visible');
-        backdrop.classList.add('visible');
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          nudge.classList.add('shown');
-          backdrop.classList.add('shown');
-        }));
+        requestAnimationFrame(() => nudge.classList.add('popped'));
       }, 10000);
     }
     function dismissNudge() {
       const nudge = document.getElementById('schedule-nudge');
-      const backdrop = document.getElementById('nudge-backdrop');
-      nudge.classList.remove('shown');
-      backdrop.classList.remove('shown');
-      setTimeout(() => {
-        nudge.classList.remove('visible');
-        backdrop.classList.remove('visible');
-      }, 300);
+      nudge.classList.remove('popped');
+      nudge.classList.add('dismissed');
       sessionStorage.setItem('nudge_dismissed', '1');
       clearTimeout(nudgeTimer);
     }
