@@ -29,7 +29,7 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ââ OWNER REDIRECT SCREEN ââ */
+    /* ── OWNER INTERSTITIAL SCREEN ── */
     #owner-screen {
       display: none;
       position: fixed;
@@ -39,26 +39,77 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 1rem;
+      gap: 1.5rem;
       font-family: var(--mono);
-      font-size: 0.8rem;
-      letter-spacing: 0.12em;
       text-transform: uppercase;
+      letter-spacing: 0.1em;
     }
 
-    #owner-screen .dot {
-      width: 6px; height: 6px;
-      background: var(--accent);
-      border-radius: 50%;
-      animation: pulse 1s ease-in-out infinite;
+    #owner-screen .owner-label {
+      font-size: 0.7rem;
+      color: rgba(245,240,232,0.5);
+      letter-spacing: 0.2em;
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.7); }
+    /* countdown ring */
+    #countdown-ring {
+      position: relative;
+      width: 72px;
+      height: 72px;
+    }
+    #countdown-ring svg {
+      transform: rotate(-90deg);
+    }
+    #countdown-ring .ring-bg {
+      fill: none;
+      stroke: rgba(255,255,255,0.1);
+      stroke-width: 3;
+    }
+    #countdown-ring .ring-fill {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-dasharray: 201;
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 1s linear;
+    }
+    #countdown-ring .ring-num {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 300;
+      color: var(--paper);
     }
 
-    /* ââ PUBLIC CARD ââ */
+    #owner-screen .keep-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+    }
+
+    /* "show card" escape button */
+    #show-card-btn {
+      margin-top: 0.5rem;
+      background: none;
+      border: 1px solid rgba(245,240,232,0.2);
+      color: rgba(245,240,232,0.55);
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 0.6rem 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    #show-card-btn:hover {
+      border-color: rgba(245,240,232,0.5);
+      color: var(--paper);
+    }
+
+    /* ── PUBLIC CARD ── */
     #public-card {
       display: none;
       min-height: 100vh;
@@ -73,7 +124,6 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* header rule */
     .top-rule {
       display: flex;
       align-items: center;
@@ -91,10 +141,7 @@
       background: var(--rule);
     }
 
-    /* name block */
-    .name-block {
-      margin-bottom: 2.5rem;
-    }
+    .name-block { margin-bottom: 2.5rem; }
     .name-block h1 {
       font-family: var(--serif);
       font-weight: 300;
@@ -104,10 +151,7 @@
       color: var(--ink);
       margin-bottom: 0.4rem;
     }
-    .name-block h1 em {
-      font-style: italic;
-      color: var(--accent);
-    }
+    .name-block h1 em { font-style: italic; color: var(--accent); }
     .name-block .role {
       font-size: 0.72rem;
       letter-spacing: 0.16em;
@@ -115,15 +159,8 @@
       color: var(--muted);
     }
 
-    /* divider */
-    .divider {
-      width: 2rem;
-      height: 1px;
-      background: var(--accent);
-      margin: 2rem 0;
-    }
+    .divider { width: 2rem; height: 1px; background: var(--accent); margin: 2rem 0; }
 
-    /* bio */
     .bio {
       font-family: var(--serif);
       font-weight: 300;
@@ -133,11 +170,7 @@
       margin-bottom: 2.5rem;
     }
 
-    /* contact rows */
-    .contact-list {
-      list-style: none;
-      margin-bottom: 2.5rem;
-    }
+    .contact-list { list-style: none; margin-bottom: 2.5rem; }
     .contact-list li {
       display: flex;
       align-items: baseline;
@@ -155,14 +188,9 @@
       width: 4.5rem;
       flex-shrink: 0;
     }
-    .contact-list a {
-      color: var(--ink);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
+    .contact-list a { color: var(--ink); text-decoration: none; transition: color 0.15s; }
     .contact-list a:hover { color: var(--accent); }
 
-    /* section label */
     .section-label {
       font-size: 0.6rem;
       letter-spacing: 0.18em;
@@ -171,7 +199,6 @@
       margin-bottom: 0.75rem;
     }
 
-    /* links grid */
     .links-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -192,13 +219,9 @@
       transition: all 0.15s;
       cursor: pointer;
     }
-    .link-pill:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
+    .link-pill:hover { border-color: var(--accent); color: var(--accent); }
     .link-pill .arrow { font-size: 0.65rem; opacity: 0.5; }
 
-    /* vcard download */
     .vcard-btn {
       display: flex;
       align-items: center;
@@ -227,12 +250,7 @@
       font-size: 0.6rem;
     }
 
-    /* claim ownership */
-    .claim-row {
-      text-align: center;
-      padding-top: 2rem;
-      border-top: 1px solid var(--rule);
-    }
+    .claim-row { text-align: center; padding-top: 2rem; border-top: 1px solid var(--rule); }
     .claim-btn {
       background: none;
       border: none;
@@ -247,7 +265,7 @@
     }
     .claim-btn:hover { color: var(--ink); }
 
-    /* ââ CLAIM MODAL ââ */
+    /* ── CLAIM MODAL ── */
     #claim-modal {
       display: none;
       position: fixed;
@@ -282,11 +300,7 @@
       margin-bottom: 1.5rem;
     }
 
-    .pin-input {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1.5rem;
-    }
+    .pin-input { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
     .pin-input input {
       flex: 1;
       background: transparent;
@@ -309,10 +323,7 @@
       75% { transform: translateX(4px); }
     }
 
-    .modal-actions {
-      display: flex;
-      gap: 0.5rem;
-    }
+    .modal-actions { display: flex; gap: 0.5rem; }
     .btn-primary {
       flex: 1;
       padding: 0.8rem;
@@ -351,16 +362,29 @@
 </head>
 <body>
 
-  <!-- OWNER: redirect in progress -->
+  <!-- OWNER: countdown interstitial -->
   <div id="owner-screen">
-    <div class="dot"></div>
-    <span>Opening Keep&hellip;</span>
+    <span class="owner-label">Opening Keep</span>
+
+    <div id="countdown-ring">
+      <svg width="72" height="72" viewBox="0 0 72 72">
+        <circle class="ring-bg" cx="36" cy="36" r="32" />
+        <circle class="ring-fill" id="ring-arc" cx="36" cy="36" r="32" />
+      </svg>
+      <div class="ring-num" id="ring-num">3</div>
+    </div>
+
+    <span class="keep-label">label / tap</span>
+
+    <button id="show-card-btn" onclick="showCardInstead()">
+      Show my contact card instead
+    </button>
   </div>
 
   <!-- PUBLIC: contact card -->
   <div id="public-card">
 
-    <div class="top-rule">contact / jon pederson</div>
+    <div class="top-rule">tap / jonpederson.github.io</div>
 
     <div class="name-block">
       <h1>Jon <em>Pederson</em></h1>
@@ -370,7 +394,7 @@
     <div class="divider"></div>
 
     <p class="bio">
-      Building unified commerce orchestration for enterprise brands selling across marketplaces, and beyond.
+      Building unified commerce orchestration for enterprise brands selling across Amazon, Walmart, eBay, and beyond.
     </p>
 
     <ul class="contact-list">
@@ -391,16 +415,16 @@
     <p class="section-label">Find me online</p>
     <div class="links-grid">
       <a class="link-pill" href="https://linkedin.com/in/jonpederson" target="_blank" rel="noopener">
-        LinkedIn <span class="arrow">â</span>
+        LinkedIn <span class="arrow">↗</span>
       </a>
       <a class="link-pill" href="https://twitter.com/jonpederson" target="_blank" rel="noopener">
-        Twitter / X <span class="arrow">â</span>
+        Twitter / X <span class="arrow">↗</span>
       </a>
       <a class="link-pill" href="skype:jonpederson?chat" target="_blank" rel="noopener">
-        Skype <span class="arrow">â</span>
+        Skype <span class="arrow">↗</span>
       </a>
       <a class="link-pill" href="https://gierd.com" target="_blank" rel="noopener">
-        Gierd <span class="arrow">â</span>
+        Gierd <span class="arrow">↗</span>
       </a>
     </div>
 
@@ -410,7 +434,7 @@
         <span class="icon">vc</span>
         Save contact
       </span>
-      <span>â</span>
+      <span>↓</span>
     </a>
 
     <div class="claim-row">
@@ -425,7 +449,7 @@
       <p class="modal-title">Owner authentication</p>
       <div class="pin-input">
         <input type="password" id="pin-field" maxlength="12"
-               placeholder="Â· Â· Â· Â· Â· Â·"
+               placeholder="· · · · · ·"
                onkeydown="if(event.key==='Enter') checkPin()" />
       </div>
       <div class="modal-actions">
@@ -433,20 +457,24 @@
         <button class="btn-cancel" onclick="closeModal()">Cancel</button>
       </div>
       <p class="modal-hint">
-        Sets a cookie on this device. Future taps will redirect directly to Keep.
+        Sets a cookie on this device. Future taps will show a 3-second countdown before opening Keep.
       </p>
     </div>
   </div>
 
   <script>
-    // âââââââââââââââââââââââââââââââââââââââââââââ
-    // CONFIGURATION â edit these before deploying
-    // âââââââââââââââââââââââââââââââââââââââââââââ
+    // ─────────────────────────────────────────────────────────────
+    // CONFIGURATION — edit these before deploying
+    // ─────────────────────────────────────────────────────────────
     const CONFIG = {
-      pin: '8233',                        // â set your PIN / passphrase here
+      pin: 'changeme',                        // ← your PIN / passphrase
       cookieName: 'jp_owner',
       cookieDays: 365,
-      redirectUrl: 'https://keep.google.com/#new',
+      // Opens Keep filtered to the "tap" label.
+      // New notes created inside this view auto-get the label.
+      // One-time setup: create a label called "tap" in Google Keep first.
+      redirectUrl: 'https://keep.google.com/u/0/#label/tap',
+      countdownSecs: 3,
       vcardData: `BEGIN:VCARD
 VERSION:3.0
 N:Pederson;Jon;;;
@@ -461,6 +489,9 @@ X-GOOGLE-TALK:stopjon
 END:VCARD`
     };
 
+    // ─────────────────────────────────────────────────────────────
+    // Cookie helpers
+    // ─────────────────────────────────────────────────────────────
     function setCookie(name, value, days) {
       const expires = new Date(Date.now() + days * 864e5).toUTCString();
       document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax`;
@@ -472,17 +503,68 @@ END:VCARD`
       }, null);
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // Countdown + redirect
+    // ─────────────────────────────────────────────────────────────
+    let countdownTimer = null;
+    let redirectAborted = false;
+    const CIRCUMFERENCE = 2 * Math.PI * 32; // ~201
+
+    function startCountdown() {
+      const screen = document.getElementById('owner-screen');
+      const arc    = document.getElementById('ring-arc');
+      const num    = document.getElementById('ring-num');
+
+      redirectAborted = false;
+      screen.style.display = 'flex';
+      arc.style.strokeDasharray  = CIRCUMFERENCE;
+      arc.style.strokeDashoffset = 0;
+      num.textContent = CONFIG.countdownSecs;
+
+      let remaining = CONFIG.countdownSecs;
+
+      function tick() {
+        if (redirectAborted) return;
+        remaining--;
+
+        const fraction = remaining / CONFIG.countdownSecs;
+        arc.style.strokeDashoffset = CIRCUMFERENCE * (1 - fraction);
+        num.textContent = remaining > 0 ? remaining : '';
+
+        if (remaining <= 0) {
+          if (!redirectAborted) window.location.href = CONFIG.redirectUrl;
+        } else {
+          countdownTimer = setTimeout(tick, 1000);
+        }
+      }
+
+      countdownTimer = setTimeout(tick, 1000);
+    }
+
+    function showCardInstead() {
+      redirectAborted = true;
+      clearTimeout(countdownTimer);
+      document.getElementById('owner-screen').style.display = 'none';
+      document.getElementById('public-card').style.display  = 'block';
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // On load
+    // ─────────────────────────────────────────────────────────────
     window.addEventListener('DOMContentLoaded', () => {
       const blob = new Blob([CONFIG.vcardData], { type: 'text/vcard' });
       document.getElementById('vcard-download').href = URL.createObjectURL(blob);
+
       if (getCookie(CONFIG.cookieName) === 'true') {
-        document.getElementById('owner-screen').style.display = 'flex';
-        setTimeout(() => { window.location.href = CONFIG.redirectUrl; }, 900);
+        startCountdown();
       } else {
         document.getElementById('public-card').style.display = 'block';
       }
     });
 
+    // ─────────────────────────────────────────────────────────────
+    // Owner auth modal
+    // ─────────────────────────────────────────────────────────────
     function openModal() {
       document.getElementById('claim-modal').classList.add('open');
       setTimeout(() => document.getElementById('pin-field').focus(), 300);
@@ -498,8 +580,7 @@ END:VCARD`
         setCookie(CONFIG.cookieName, 'true', CONFIG.cookieDays);
         closeModal();
         document.getElementById('public-card').style.display = 'none';
-        document.getElementById('owner-screen').style.display = 'flex';
-        setTimeout(() => { window.location.href = CONFIG.redirectUrl; }, 900);
+        startCountdown();
       } else {
         input.classList.add('error');
         input.value = '';
