@@ -453,6 +453,7 @@
     #schedule-nudge.popped .nudge-dismiss {
       opacity: 1;
       pointer-events: auto;
+      transition-delay: 0.5s;
     }
     .nudge-dismiss:hover { color: var(--paper); }
   </style>
@@ -690,7 +691,6 @@ END:VCARD`
     function dismissNudge() {
       const nudge = document.getElementById('schedule-nudge');
       nudge.classList.remove('popped');
-      nudge.classList.add('dismissed');
       sessionStorage.setItem('nudge_dismissed', '1');
       clearTimeout(nudgeTimer);
     }
