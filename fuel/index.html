@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wisconsin Fuel Buy/Wait Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#0f0e0c; --paper:#f5f0e8; --accent:#c8401a; --good:#3d7a3d; --bad:#c8401a;
+    --muted:#8a8070; --rule:#d6cfc2; --card:#fffdf9; --mono:'DM Mono',monospace; --serif:'Fraunces',Georgia,serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:var(--paper);color:var(--ink);font-family:var(--mono);-webkit-font-smoothing:antialiased;}
+  body{padding-bottom:4rem;}
+  a{color:var(--accent);}
+  .wrap{max-width:980px;margin:0 auto;padding:0 1.25rem;}
+
+  header.top{border-bottom:1px solid var(--rule);padding:1.75rem 0 1.25rem;margin-bottom:1.5rem;}
+  header.top h1{font-family:var(--serif);font-weight:300;font-size:clamp(1.7rem,4.5vw,2.4rem);letter-spacing:-0.01em;}
+  header.top h1 em{font-style:italic;color:var(--accent);}
+  header.top .sub{color:var(--muted);font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;margin-top:0.4rem;}
+  header.top .meta{margin-top:0.9rem;font-size:0.72rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:0.4rem 1.2rem;}
+  header.top .meta b{color:var(--ink);font-weight:500;}
+  a.home-link{font-size:0.65rem;color:var(--muted);text-decoration:none;letter-spacing:0.1em;text-transform:uppercase;}
+  a.home-link:hover{color:var(--accent);}
+
+  .weekend-note{background:#efe6d6;border:1px solid var(--rule);padding:0.7rem 1rem;font-size:0.75rem;margin-bottom:1.25rem;line-height:1.5;}
+  .weekend-note b{text-transform:uppercase;letter-spacing:0.08em;font-size:0.65rem;color:var(--accent);}
+
+  nav.tabs{display:flex;gap:0.4rem;margin-bottom:1.5rem;border-bottom:1px solid var(--rule);flex-wrap:wrap;}
+  nav.tabs button{background:none;border:none;font-family:var(--mono);font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:0.7rem 0.9rem;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+  nav.tabs button:hover{color:var(--ink);}
+  nav.tabs button.active{color:var(--ink);border-bottom-color:var(--accent);}
+
+  .tabpanel{display:none;}
+  .tabpanel.active{display:block;}
+
+  #alertBanner{display:none;background:var(--ink);color:var(--paper);padding:1rem 1.2rem;margin-bottom:1.5rem;font-size:0.85rem;letter-spacing:0.03em;border-left:4px solid var(--accent);}
+  #alertBanner b{color:var(--accent);}
+
+  .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.75rem;}
+  @media(max-width:640px){.summary-grid{grid-template-columns:1fr;}}
+  .sumcard{background:var(--card);border:1px solid var(--rule);padding:1.1rem 1.2rem;}
+  .sumcard .fuel-name{font-size:0.65rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem;}
+  .sumcard .decision{font-family:var(--serif);font-size:1.35rem;font-weight:400;margin-bottom:0.5rem;}
+  .decision.buy{color:var(--good);}
+  .decision.wait{color:var(--bad);}
+  .decision.neutral{color:var(--muted);}
+  .sumcard .rowline{display:flex;justify-content:space-between;font-size:0.72rem;color:var(--muted);padding:0.25rem 0;border-top:1px solid var(--rule);}
+  .sumcard .rowline b{color:var(--ink);font-weight:500;}
+  .arrow-up{color:var(--bad);} .arrow-down{color:var(--good);} .arrow-flat{color:var(--muted);}
+
+  fieldset{border:1px solid var(--rule);margin-bottom:1rem;padding:0;background:var(--card);}
+  legend{display:none;}
+  details{border:1px solid var(--rule);margin-bottom:0.9rem;background:var(--card);}
+  details > summary{cursor:pointer;padding:0.75rem 1rem;font-size:0.72rem;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink);list-style:none;display:flex;justify-content:space-between;align-items:center;background:#efe8db;}
+  details > summary::-webkit-details-marker{display:none;}
+  details > summary .tierpts{font-size:0.68rem;color:var(--muted);text-transform:none;letter-spacing:0;}
+  .fields{padding:0.9rem 1rem 1.1rem;display:grid;gap:0.7rem;}
+  .frow{display:grid;grid-template-columns:1fr 130px;gap:0.6rem;align-items:start;}
+  @media(max-width:560px){.frow{grid-template-columns:1fr;}}
+  .frow label{font-size:0.75rem;line-height:1.4;padding-top:0.35rem;}
+  .frow .help{display:block;color:var(--muted);font-size:0.65rem;margin-top:0.15rem;line-height:1.4;}
+  .frow input[type=number], .frow input[type=text], .frow select{
+    width:100%;background:var(--paper);border:1px solid var(--rule);border-bottom:2px solid var(--ink);
+    padding:0.45rem 0.5rem;font-family:var(--mono);font-size:0.8rem;color:var(--ink);outline:none;
+  }
+  .frow input:focus,.frow select:focus{border-bottom-color:var(--accent);}
+  .frow.checkrow{grid-template-columns:1fr;}
+  .frow.checkrow label{display:flex;align-items:flex-start;gap:0.5rem;padding-top:0;}
+  .frow.checkrow input[type=checkbox]{margin-top:0.25rem;flex-shrink:0;width:1rem;height:1rem;}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+  @media(max-width:820px){.two-col{grid-template-columns:1fr;}}
+  .col-title{font-family:var(--serif);font-size:1.3rem;font-weight:400;margin-bottom:0.8rem;padding-bottom:0.5rem;border-bottom:2px solid var(--ink);}
+
+  .shared-box{margin-bottom:1.75rem;}
+
+  .breakdown{font-size:0.7rem;border-collapse:collapse;width:100%;margin-top:0.5rem;}
+  .breakdown th,.breakdown td{text-align:left;padding:0.35rem 0.4rem;border-bottom:1px solid var(--rule);}
+  .breakdown th{color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;font-size:0.62rem;}
+  .breakdown td.pts{text-align:right;font-weight:500;white-space:nowrap;}
+  .pts.pos{color:var(--good);} .pts.neg{color:var(--bad);}
+  .breakdown tr.total td{border-top:2px solid var(--ink);border-bottom:none;font-weight:600;padding-top:0.5rem;}
+
+  .btnrow{display:flex;gap:0.6rem;flex-wrap:wrap;margin:1.5rem 0;}
+  button.action{background:var(--ink);color:var(--paper);border:none;padding:0.75rem 1.1rem;font-family:var(--mono);font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;}
+  button.action:hover{background:var(--accent);}
+  button.action.secondary{background:transparent;color:var(--ink);border:1px solid var(--rule);}
+  button.action.secondary:hover{border-color:var(--ink);background:transparent;}
+
+  #reportOut{display:none;background:var(--card);border:1px solid var(--rule);padding:1.2rem 1.4rem;margin-top:1rem;white-space:pre-wrap;font-size:0.78rem;line-height:1.6;max-height:70vh;overflow:auto;}
+
+  table.histtable{width:100%;border-collapse:collapse;font-size:0.72rem;margin-top:0.8rem;}
+  table.histtable th,table.histtable td{padding:0.5rem 0.55rem;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top;}
+  table.histtable th{text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);font-size:0.62rem;}
+  table.histtable tr:hover{background:#efe8db;}
+  .mini-btn{font-family:var(--mono);font-size:0.62rem;letter-spacing:0.06em;text-transform:uppercase;background:none;border:1px solid var(--rule);padding:0.3rem 0.55rem;cursor:pointer;color:var(--ink);}
+  .mini-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+  .actuals-form{display:none;background:#efe8db;padding:0.8rem;margin-top:0.4rem;}
+  .actuals-form.open{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;}
+  .actuals-form label{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);display:block;margin-bottom:0.2rem;}
+  .actuals-form input{width:100%;padding:0.35rem;font-family:var(--mono);font-size:0.75rem;border:1px solid var(--rule);}
+
+  .src-group{margin-bottom:1.5rem;}
+  .src-group h3{font-family:var(--serif);font-size:1.05rem;font-weight:500;margin-bottom:0.5rem;}
+  .src-group ul{list-style:none;display:grid;gap:0.3rem;}
+  .src-group a{font-size:0.78rem;text-decoration:none;}
+  .src-group a:hover{text-decoration:underline;}
+  .note{font-size:0.78rem;line-height:1.6;color:var(--ink);margin-bottom:1rem;}
+  .note.muted{color:var(--muted);font-size:0.72rem;}
+
+  .badge{display:inline-block;font-size:0.6rem;letter-spacing:0.06em;text-transform:uppercase;padding:0.15rem 0.4rem;border:1px solid var(--rule);color:var(--muted);}
+  .conf-High{color:var(--good);} .conf-Medium{color:#a67c00;} .conf-Low{color:var(--bad);}
+
+  footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--rule);font-size:0.65rem;color:var(--muted);text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <a class="home-link" href="/">&larr; jonpederson.github.io</a>
+    <h1>Wisconsin Fuel <em>Buy/Wait</em> Agent</h1>
+    <div class="sub">New Auburn &middot; Chippewa County &middot; Eau Claire / Chippewa Falls proxy &middot; Twin Cities upstream signal</div>
+    <div class="meta">
+      <span>Report time: <b id="nowLabel">&mdash;</b></span>
+      <span>Day: <b id="dowLabel">&mdash;</b></span>
+    </div>
+  </header>
+
+  <div class="weekend-note" id="weekendNote" style="display:none;"></div>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="assess">Assessment</button>
+    <button class="tab-btn" data-tab="history">History &amp; Calibration</button>
+    <button class="tab-btn" data-tab="sources">Sources &amp; Methodology</button>
+  </nav>
+
+  <!-- ============ ASSESSMENT TAB ============ -->
+  <div class="tabpanel active" id="tab-assess">
+
+    <div id="alertBanner"></div>
+
+    <div class="summary-grid">
+      <div class="sumcard">
+        <div class="fuel-name">Regular Unleaded Gasoline</div>
+        <div class="decision neutral" id="gasDecisionText">Enter data below</div>
+        <div class="rowline"><span>Score</span><b id="gasScoreOut">0</b></div>
+        <div class="rowline"><span>Confidence</span><b id="gasConfOut">&mdash;</b></div>
+        <div class="rowline"><span>24&ndash;48 hr outlook</span><b id="gasOutlook24">&mdash;</b></div>
+        <div class="rowline"><span>3&ndash;7 day outlook</span><b id="gasOutlook7">&mdash;</b></div>
+      </div>
+      <div class="sumcard">
+        <div class="fuel-name">On-Road Diesel</div>
+        <div class="decision neutral" id="dieselDecisionText">Enter data below</div>
+        <div class="rowline"><span>Score</span><b id="dieselScoreOut">0</b></div>
+        <div class="rowline"><span>Confidence</span><b id="dieselConfOut">&mdash;</b></div>
+        <div class="rowline"><span>24&ndash;48 hr outlook</span><b id="dieselOutlook24">&mdash;</b></div>
+        <div class="rowline"><span>3&ndash;7 day outlook</span><b id="dieselOutlook7">&mdash;</b></div>
+      </div>
+    </div>
+
+    <p class="note muted">This tool cannot scrape CME futures, GasBuddy, or AAA data automatically &mdash; a static site has no server and those sources block cross-origin/browser access. Look up each value from the links in <b>Sources &amp; Methodology</b>, enter it below, and the scoring engine applies the exact rules from the spec. Leave a field blank ("Unavailable") if you can't find it &mdash; confidence adjusts automatically. Your entries autosave to this browser.</p>
+
+    <div class="shared-box">
+      <details open>
+        <summary>Shared &middot; Crude Oil (Tier 3) <span class="tierpts">Brent primary, WTI confirmation &middot; secondary indicator</span></summary>
+        <div class="fields">
+          <div class="frow"><label>Brent crude, current ($/bbl)<span class="help">Used for both fuels' crude scoring rule.</span></label><input type="number" step="0.01" id="brent_now"></div>
+          <div class="frow"><label>Brent, change over ~3 trading sessions ($, signed)</label><input type="number" step="0.01" id="brent_chg3s"></div>
+          <div class="frow"><label>WTI crude, current ($/bbl) <span class="help">Confirmation only &mdash; not scored directly.</span></label><input type="number" step="0.01" id="wti_now"></div>
+          <div class="frow"><label>WTI, change over ~3 sessions ($, signed)</label><input type="number" step="0.01" id="wti_chg3s"></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="two-col">
+      <!-- ============ GASOLINE COLUMN ============ -->
+      <div>
+        <div class="col-title">Gasoline</div>
+
+        <details open>
+          <summary>1&ndash;3 &middot; RBOB Futures (Tier 1)</summary>
+          <div class="fields">
+            <div class="frow"><label>RBOB current price ($/gal)</label><input type="number" step="0.0001" id="g_rbob_now"></div>
+            <div class="frow"><label>RBOB change, ~24h (&cent;, signed)<span class="help">&plusmn;2&ndash;3.99=8pt, 4&ndash;5.99=15pt, &ge;6=22pt</span></label><input type="number" step="0.01" id="g_rbob_chg24h"></div>
+            <div class="frow"><label>RBOB change, ~3 sessions (&cent;, signed)<span class="help">&ge;8=15pt (or &ge;4=8pt)</span></label><input type="number" step="0.01" id="g_rbob_chg3s"></div>
+            <div class="frow"><label>RBOB change, ~5 sessions (&cent;, signed) <span class="help">Context only, not scored.</span></label><input type="number" step="0.01" id="g_rbob_chg5s"></div>
+            <div class="frow"><label>Momentum (last 3 sessions)</label>
+              <select id="g_rbob_momentum">
+                <option value="none">Not accelerating</option>
+                <option value="up">Accelerating increase (+5)</option>
+                <option value="down">Accelerating decrease (&minus;5)</option>
+              </select>
+            </div>
+          </div>
+        </details>
+
+        <details open>
+          <summary>Retail Prices (reference)</summary>
+          <div class="fields">
+            <div class="frow"><label>New Auburn regular ($/gal) <span class="help">If unavailable, use nearest rural station.</span></label><input type="number" step="0.001" id="g_price_newauburn"></div>
+            <div class="frow"><label>Chippewa Falls regular ($/gal)</label><input type="number" step="0.001" id="g_price_chippewa"></div>
+            <div class="frow"><label>Eau Claire regular ($/gal)</label><input type="number" step="0.001" id="g_price_eauclaire"></div>
+            <div class="frow"><label>Wisconsin average regular ($/gal)</label><input type="number" step="0.001" id="g_price_wiavg"></div>
+            <div class="frow"><label>Twin Cities regular ($/gal)</label><input type="number" step="0.001" id="g_price_twincities"></div>
+          </div>
+        </details>
+
+        <details>
+          <summary>4 &middot; Twin Cities Retail Leading Signal</summary>
+          <div class="fields">
+            <div class="frow"><label>Twin Cities price increase over ~24h (&cent;) <span class="help">&ge;15=20pt, 10&ndash;14.9=15pt, 6&ndash;9.9=8pt. Requires a marketwide move.</span></label><input type="number" step="0.1" id="g_tc_restoration"></div>
+            <div class="frow checkrow"><label><input type="checkbox" id="g_tc_broad"> Reflects several stations/an important chain, not one isolated station</label></div>
+            <div class="frow"><label>Twin Cities cumulative change, prior 3&ndash;5 days (&cent;, negative=decline)<span class="help">&le;&minus;8 over 3&ndash;5 days = &minus;8pt</span></label><input type="number" step="0.1" id="g_tc_decline35"></div>
+          </div>
+        </details>
+
+        <details>
+          <summary>5 &middot; Eau Claire / Chippewa Falls Signal</summary>
+          <div class="fields">
+            <div class="frow"><label>EC/Chippewa Falls direction</label>
+              <select id="g_ec_dir"><option value="flat">Flat / no clear move</option><option value="increase">Broad increase</option><option value="decrease">Falling</option></select>
+            </div>
+            <div class="frow"><label>Magnitude of that move (&cent;, positive)<span class="help">Increase: &ge;10=20pt, 6&ndash;9.9=12pt, 3&ndash;5.9=5pt. Decrease while New Auburn hasn't followed = &minus;10pt flat.</span></label><input type="number" step="0.1" id="g_ec_mag"></div>
+            <div class="frow checkrow"><label><input type="checkbox" id="g_ec_naub_caught_up"> New Auburn-area prices have already moved similarly (i.e. already caught up)</label></div>
+          </div>
+        </details>
+
+        <details>
+          <summary>6 &middot; Gasoline Catch-Up Signal</summary>
+          <div class="fields">
+            <div class="frow"><label>Divergence between upstream (RBOB/Twin Cities/EC) and local (New Auburn)</label>
+              <select id="g_catchup">
+                <option value="none">No clear divergence</option>
+                <option value="up_lag">Upstream rising, New Auburn hasn't moved yet (+15)</option>
+                <option value="down_lag">Upstream falling, New Auburn hasn't moved yet (&minus;15)</option>
+              </select>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>7 &middot; Gasoline Price-Cycle Position</summary>
+          <div class="fields">
+            <div class="frow checkrow"><label><input type="checkbox" id="g_cycle_bottom_precond"> Local/EC gas has declined &ge;4 straight days and is down &ge;7&ndash;10&cent; from its recent local high</label></div>
+            <div class="frow"><label>Given the above, current state</label>
+              <select id="g_cycle_state">
+                <option value="none">N/A</option>
+                <option value="turn">RBOB turns up &ge;3&cent; and/or Twin Cities restoration underway (+15)</option>
+                <option value="still_falling">RBOB and Twin Cities both still falling (&minus;8)</option>
+              </select>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>8 &middot; PADD 2 Gasoline Inventories (Tier 2)</summary>
+          <div class="fields">
+            <div class="frow"><label>Latest week-over-week change (%, signed)<span class="help">&le;&minus;3=7pt, &minus;1 to &minus;2.99=3pt, +1 to +2.99=&minus;3pt, &ge;+3=&minus;7pt</span></label><input type="number" step="0.1" id="g_padd2_wow"></div>
+            <div class="frow checkrow"><label><input type="checkbox" id="g_padd2_consec"> Same direction has persisted &ge;3 consecutive weeks (&plusmn;3 more)</label></div>
+          </div>
+        </details>
+
+        <details>
+          <summary>9 &middot; Refinery / Pipeline Events &mdash; Gasoline (Tier 4)</summary>
+          <div class="fields">
+            <div class="frow"><label>Confirmed event affecting MN/WI/PADD2, last 72h</label>
+              <select id="g_disruption">
+                <option value="none">None found / no credible source</option>
+                <option value="moderate">Moderate disruption (+8)</option>
+                <option value="major">Major unplanned event (+15)</option>
+                <option value="mod_restore">Moderate restoration (&minus;5)</option>
+                <option value="major_restore">Major restart/restoration (&minus;10)</option>
+              </select>
+            </div>
+            <div class="frow checkrow"><label><input type="checkbox" id="g_news_checked"> I searched refinery/pipeline/terminal news for the last 72 hours (Pine Bend, St. Paul Park, Superior, WI/MN pipelines)</label></div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Override Conditions</summary>
+          <div class="fields">
+            <div class="frow checkrow"><label><input type="checkbox" id="g_override_chase_local_jump"> Local gasoline already jumped &ge;15&cent; within 24h</label></div>
+            <div class="frow checkrow"><label><input type="checkbox" id="g_override_chase_tc_stopped"> ...and Twin Cities has stopped rising (restoration looks complete)</label></div>
+          </div>
+        </details>
+      </div>
+
+      <!-- ============ DIESEL COLUMN ============ -->
+      <div>
+        <div class="col-title">Diesel</div>
+
+        <details open>
+          <summary>1&ndash;3 &middot; ULSD Futures (Tier 1)</summary>
+          <div class="fields">
+            <div class="frow"><label>ULSD current price ($/gal)</label><input type="number" step="0.0001" id="d_ulsd_now"></div>
+            <div class="frow"><label>ULSD change, ~24h (&cent;, signed)<span class="help">2&ndash;3.99=8pt, 4&ndash;5.99=16pt, &ge;6=25pt</span></label><input type="number" step="0.01" id="d_ulsd_chg24h"></div>
+            <div class="frow"><label>ULSD change, ~3 sessions (&cent;, signed)<span class="help">&ge;10=20pt (or &ge;5=10pt)</span></label><input type="number" step="0.01" id="d_ulsd_chg3s"></div>
+            <div class="frow"><label>ULSD change, ~5 sessions (&cent;, signed) <span class="help">Context only.</span></label><input type="number" step="0.01" id="d_ulsd_chg5s"></div>
+            <div class="frow"><label>Momentum</label>
+              <select id="d_ulsd_trend">
+                <option value="none">No consistent streak</option>
+                <option value="up3">Risen &ge;3 consecutive sessions (+5)</option>
+                <option value="down3">Fallen &ge;3 consecutive sessions (&minus;5)</option>
+              </select>
+            </div>
+            <div class="frow checkrow"><label><input type="checkbox" id="d_ulsd_accel"> That move is accelerating sharply (&plusmn;3 more)</label></div>
+          </div>
+        </details>
+
+        <details open>
+          <summary>Retail Prices (reference)</summary>
+          <div class="fields">
+            <div class="frow"><label>New Auburn diesel ($/gal)</label><input type="number" step="0.001" id="d_price_newauburn"></div>
+            <div class="frow"><label>Chippewa Falls diesel ($/gal)</label><input type="number" step="0.001" id="d_price_chippewa"></div>
+            <div class="frow"><label>Eau Claire diesel ($/gal)</label><input type="number" step="0.001" id="d_price_eauclaire"></div>
+            <div class="frow"><label>Wisconsin average diesel ($/gal)</label><input type="number" step="0.001" id="d_price_wiavg"></div>
+            <div class="frow"><label>Twin Cities / MN diesel ($/gal)</label><input type="number" step="0.001" id="d_price_twincities"></div>
+          </div>
+        </details>
+
+        <details>
+          <summary>4 &middot; Diesel Catch-Up Signal</summary>
+          <div class="fields">
+            <div class="frow"><label>Divergence between ULSD and Eau Claire/WI diesel</label>
+              <select id="d_catchup">
+                <option value="none">No clear divergence</option>
+                <option value="up_lag">ULSD rising, local diesel hasn't caught up (+15)</option>
+                <option value="down_lag">ULSD falling, local diesel unchanged (&minus;15)</option>
+              </select>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>5 &middot; Eau Claire / Wisconsin Diesel</summary>
+          <div class="fields">
+            <div class="frow"><label>EC/WI diesel direction</label>
+              <select id="d_ec_dir"><option value="flat">Flat</option><option value="increase">Increase</option><option value="decrease">Decrease</option></select>
+            </div>
+            <div class="frow"><label>Magnitude (&cent;, positive)<span class="help">&ge;10=12pt(&plusmn;), 5&ndash;9.9=6pt(&plusmn;)</span></label><input type="number" step="0.1" id="d_ec_mag"></div>
+          </div>
+        </details>
+
+        <details>
+          <summary>6 &middot; PADD 2 Distillate Inventories (Tier 2)</summary>
+          <div class="fields">
+            <div class="frow"><label>Latest week-over-week change (%, signed)<span class="help">&le;&minus;3=10pt, &minus;1 to &minus;2.99=5pt, +1 to +2.99=&minus;5pt, &ge;+3=&minus;10pt</span></label><input type="number" step="0.1" id="d_padd2_wow"></div>
+            <div class="frow checkrow"><label><input type="checkbox" id="d_padd2_consec"> 3 consecutive weekly draws or builds in same direction (&plusmn;5 more)</label></div>
+          </div>
+        </details>
+
+        <details>
+          <summary>7 &middot; Diesel Crack-Spread Signal</summary>
+          <div class="fields">
+            <div class="frow"><label>ULSD vs. crude divergence</label>
+              <select id="d_crack">
+                <option value="none">Moving together / unclear</option>
+                <option value="ulsd_up">ULSD rising while crude flat or falling (+8)</option>
+                <option value="ulsd_down">ULSD falling while crude rising (&minus;8)</option>
+              </select>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>8 &middot; Refinery / Pipeline Events &mdash; Diesel (Tier 4)</summary>
+          <div class="fields">
+            <div class="frow"><label>Confirmed Midwest supply event, last 72h</label>
+              <select id="d_disruption">
+                <option value="none">None found / no credible source</option>
+                <option value="moderate">Moderate disruption (+8)</option>
+                <option value="major">Major disruption (+15)</option>
+                <option value="mod_restore">Moderate restoration (&minus;5)</option>
+                <option value="major_restore">Major restart/restoration (&minus;10)</option>
+              </select>
+            </div>
+            <div class="frow checkrow"><label><input type="checkbox" id="d_news_checked"> I searched refinery/pipeline/terminal news for the last 72 hours</label></div>
+          </div>
+        </details>
+
+        <details>
+          <summary>9&ndash;10 &middot; Seasonal Context</summary>
+          <div class="fields">
+            <div class="frow"><label>Seasonal demand state</label>
+              <select id="d_seasonal">
+                <option value="none">No clear seasonal signal / don't add points merely for season</option>
+                <option value="elevated">Elevated seasonal demand + draws and/or rising ULSD (+4)</option>
+                <option value="weak">Unusually weak seasonal demand + inventory builds (&minus;4)</option>
+              </select>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="btnrow">
+      <button class="action" onclick="generateReport()">Generate Report</button>
+      <button class="action secondary" onclick="saveToHistory()">Save to History</button>
+      <button class="action secondary" onclick="copyReport()">Copy Report</button>
+      <button class="action secondary" onclick="downloadReport()">Download .md</button>
+      <button class="action secondary" onclick="clearForm()">Clear Form</button>
+    </div>
+
+    <div id="reportOut"></div>
+
+  </div>
+
+  <!-- ============ HISTORY TAB ============ -->
+  <div class="tabpanel" id="tab-history">
+    <p class="note">Every saved assessment is stored in this browser (localStorage) &mdash; nothing is sent anywhere. Come back after 24h/48h/7 days and fill in the actual price you observed to track whether the recommendation would have saved you money, per the spec's Historical Learning and Self-Calibration sections. After ~30 saved observations, look for which upstream indicators actually led your local price.</p>
+    <div class="btnrow">
+      <button class="action secondary" onclick="exportHistoryJSON()">Export JSON</button>
+      <button class="action secondary" onclick="exportHistoryCSV()">Export CSV</button>
+      <button class="action secondary" onclick="document.getElementById('importFile').click()">Import JSON</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importHistoryJSON(event)">
+      <button class="action secondary" onclick="clearHistory()">Clear All History</button>
+    </div>
+    <div id="historyTableWrap"><p class="note muted">No saved reports yet.</p></div>
+  </div>
+
+  <!-- ============ SOURCES TAB ============ -->
+  <div class="tabpanel" id="tab-sources">
+    <p class="note">Look up each figure from the most authoritative source available, in roughly this priority order, per the spec: (1) CME/live futures quote, (2) EIA, (3) AAA, (4) GasBuddy/station-price service, (5) Wisconsin state agencies, (6) Minnesota state agencies, (7) refiner/operator announcements, (8) Reuters/Bloomberg/AP/major energy reporting, (9) local news for refinery/pipeline/station events. Record each source's timestamp; prefer data from the last trading session or last 24 hours.</p>
+
+    <div class="src-group">
+      <h3>Futures (Tier 1)</h3>
+      <ul>
+        <li><a href="https://www.cmegroup.com/markets/energy/refined-products/rbob-gasoline.html" target="_blank" rel="noopener">CME &mdash; RBOB Gasoline futures (RB)</a></li>
+        <li><a href="https://www.cmegroup.com/markets/energy/refined-products/heating-oil.html" target="_blank" rel="noopener">CME &mdash; NY Harbor ULSD futures (HO)</a></li>
+        <li><a href="https://www.cmegroup.com/markets/energy/crude-oil/light-sweet-crude.html" target="_blank" rel="noopener">CME &mdash; WTI crude futures</a></li>
+        <li><a href="https://www.marketwatch.com/investing/future/rb.1" target="_blank" rel="noopener">MarketWatch &mdash; RBOB quote</a></li>
+        <li><a href="https://www.marketwatch.com/investing/future/ho.1" target="_blank" rel="noopener">MarketWatch &mdash; ULSD quote</a></li>
+        <li><a href="https://oilprice.com/oil-price-charts" target="_blank" rel="noopener">OilPrice.com &mdash; Brent/WTI charts</a></li>
+      </ul>
+    </div>
+
+    <div class="src-group">
+      <h3>EIA (Tier 2)</h3>
+      <ul>
+        <li><a href="https://www.eia.gov/dnav/pet/pet_stoc_wstk_dcu_r20_w.htm" target="_blank" rel="noopener">EIA &mdash; PADD 2 weekly gasoline stocks</a></li>
+        <li><a href="https://www.eia.gov/dnav/pet/pet_stoc_wstk_dcu_r20_w.htm" target="_blank" rel="noopener">EIA &mdash; PADD 2 weekly distillate stocks</a></li>
+        <li><a href="https://www.eia.gov/petroleum/gasdiesel/" target="_blank" rel="noopener">EIA &mdash; Weekly retail gasoline &amp; diesel prices</a></li>
+        <li><a href="https://www.eia.gov/opendata/" target="_blank" rel="noopener">EIA Open Data API (register for a free key if you want to script your own lookups)</a></li>
+      </ul>
+    </div>
+
+    <div class="src-group">
+      <h3>Retail price data</h3>
+      <ul>
+        <li><a href="https://gasprices.aaa.com/?state=WI" target="_blank" rel="noopener">AAA &mdash; Wisconsin gas prices</a></li>
+        <li><a href="https://gasprices.aaa.com/?state=MN" target="_blank" rel="noopener">AAA &mdash; Minnesota gas prices</a></li>
+        <li><a href="https://www.gasbuddy.com/gasprices/wisconsin/new-auburn" target="_blank" rel="noopener">GasBuddy &mdash; New Auburn, WI</a></li>
+        <li><a href="https://www.gasbuddy.com/gasprices/wisconsin/chippewa-falls" target="_blank" rel="noopener">GasBuddy &mdash; Chippewa Falls, WI</a></li>
+        <li><a href="https://www.gasbuddy.com/gasprices/wisconsin/eau-claire" target="_blank" rel="noopener">GasBuddy &mdash; Eau Claire, WI</a></li>
+        <li><a href="https://www.gasbuddy.com/gasprices/minnesota/minneapolis" target="_blank" rel="noopener">GasBuddy &mdash; Minneapolis, MN</a></li>
+        <li><a href="https://www.gasbuddy.com/gasprices/minnesota/st-paul" target="_blank" rel="noopener">GasBuddy &mdash; St. Paul, MN</a></li>
+        <li><a href="https://www.gasbuddy.com/diesel" target="_blank" rel="noopener">GasBuddy &mdash; Diesel price map</a></li>
+      </ul>
+    </div>
+
+    <div class="src-group">
+      <h3>Refinery / pipeline / disruption news (Tier 4, last 72h)</h3>
+      <ul>
+        <li><a href="https://news.google.com/search?q=Pine%20Bend%20refinery" target="_blank" rel="noopener">Pine Bend refinery &mdash; news search</a></li>
+        <li><a href="https://news.google.com/search?q=St.%20Paul%20Park%20refinery" target="_blank" rel="noopener">St. Paul Park refinery &mdash; news search</a></li>
+        <li><a href="https://news.google.com/search?q=Superior%20refinery%20Wisconsin" target="_blank" rel="noopener">Superior refinery &mdash; news search</a></li>
+        <li><a href="https://news.google.com/search?q=Midwest%20refinery%20outage%20PADD%202" target="_blank" rel="noopener">Midwest / PADD 2 refinery outage &mdash; news search</a></li>
+        <li><a href="https://news.google.com/search?q=Wisconsin%20OR%20Minnesota%20fuel%20pipeline%20outage" target="_blank" rel="noopener">Wisconsin/Minnesota fuel pipeline &mdash; news search</a></li>
+        <li><a href="https://news.google.com/search?q=gasoline%20OR%20diesel%20pipeline%20outage%20Midwest" target="_blank" rel="noopener">Gasoline/diesel pipeline outage Midwest &mdash; news search</a></li>
+      </ul>
+    </div>
+
+    <div class="src-group">
+      <h3>State agencies</h3>
+      <ul>
+        <li><a href="https://datcp.wi.gov/" target="_blank" rel="noopener">Wisconsin DATCP (weights &amp; measures / fuel)</a></li>
+        <li><a href="https://mn.gov/commerce/" target="_blank" rel="noopener">Minnesota Dept. of Commerce</a></li>
+      </ul>
+    </div>
+
+    <div class="src-group">
+      <h3>Methodology &amp; limits of this tool</h3>
+      <p class="note">This is a client-side calculator implementing the scoring rules, decision thresholds, override rules, and conflict-resolution hierarchy from the source spec exactly as written, for both regular gasoline and on-road diesel scored independently. It cannot auto-fetch RBOB/ULSD futures, GasBuddy, or AAA data: those either require paid/authenticated feeds or block browser-based (CORS) requests from a static site with no backend. You look the numbers up (links above) and enter them; the engine does the arithmetic, applies the override and price-jump-warning rules, generates the report in the required format, and lets you log outcomes over time for calibration. Never invent a value &mdash; leave a field blank and the confidence rating will reflect what's missing, exactly as the spec requires.</p>
+      <p class="note muted">Do not give scoring weight to the S&amp;P 500, Dow, Nasdaq, generic inflation stories, political commentary, unsourced social-media rumors, national averages alone, a single station, or crude oil alone &mdash; this tool doesn't collect any of those as inputs on purpose.</p>
+    </div>
+  </div>
+
+  <footer>Wisconsin Fuel Buy/Wait Agent &middot; runs entirely in your browser &middot; data stays in localStorage</footer>
+</div>
+
+<script>
+/* ---------- tab switching ---------- */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab==='history') renderHistory();
+  });
+});
+
+/* ---------- date / weekend context ---------- */
+function fmtNow(){
+  const d = new Date();
+  const opts = {timeZone:'America/Chicago', weekday:'long', year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'};
+  return d.toLocaleString('en-US', opts) + ' CT';
+}
+function dowInChicago(){
+  return new Date().toLocaleString('en-US',{timeZone:'America/Chicago', weekday:'long'});
+}
+function initHeader(){
+  document.getElementById('nowLabel').textContent = fmtNow();
+  const dow = dowInChicago();
+  document.getElementById('dowLabel').textContent = dow;
+  const note = document.getElementById('weekendNote');
+  if(dow==='Friday'){
+    note.style.display='block';
+    note.innerHTML = '<b>Friday</b> &mdash; futures stop trading for the weekend after today\'s close. If RBOB/ULSD rose sharply today and local retail hasn\'t followed, lean toward buying before the weekend: stations can reprice off the higher wholesale environment before futures reopen Monday.';
+  } else if(dow==='Saturday' || dow==='Sunday'){
+    note.style.display='block';
+    note.innerHTML = '<b>' + dow + '</b> &mdash; futures are closed. An unchanged quote today is not evidence prices have stabilized. Weight Friday\'s settlement/weekly trend, Twin Cities and Eau Claire/Chippewa Falls retail moves, and refinery/pipeline news more heavily. Confidence should be reduced if current wholesale/rack data is unavailable.';
+  } else if(dow==='Monday'){
+    note.style.display='block';
+    note.innerHTML = '<b>Monday</b> &mdash; recheck futures once markets have reopened before leaning heavily on weekend retail movement.';
+  } else {
+    note.style.display='none';
+  }
+}
+initHeader();
+
+/* ---------- form field registry & autosave ---------- */
+const FIELD_IDS = [
+  'brent_now','brent_chg3s','wti_now','wti_chg3s',
+  'g_rbob_now','g_rbob_chg24h','g_rbob_chg3s','g_rbob_chg5s','g_rbob_momentum',
+  'g_price_newauburn','g_price_chippewa','g_price_eauclaire','g_price_wiavg','g_price_twincities',
+  'g_tc_restoration','g_tc_broad','g_tc_decline35',
+  'g_ec_dir','g_ec_mag','g_ec_naub_caught_up',
+  'g_catchup','g_cycle_bottom_precond','g_cycle_state',
+  'g_padd2_wow','g_padd2_consec',
+  'g_disruption','g_news_checked',
+  'g_override_chase_local_jump','g_override_chase_tc_stopped',
+  'd_ulsd_now','d_ulsd_chg24h','d_ulsd_chg3s','d_ulsd_chg5s','d_ulsd_trend','d_ulsd_accel',
+  'd_price_newauburn','d_price_chippewa','d_price_eauclaire','d_price_wiavg','d_price_twincities',
+  'd_catchup','d_ec_dir','d_ec_mag',
+  'd_padd2_wow','d_padd2_consec',
+  'd_crack',
+  'd_disruption','d_news_checked',
+  'd_seasonal'
+];
+const AUTOSAVE_KEY = 'fuelAgentDraft_v1';
+const HISTORY_KEY = 'fuelAgentHistory_v1';
+
+function getVal(id){
+  const el = document.getElementById(id);
+  if(!el) return null;
+  if(el.type==='checkbox') return el.checked;
+  if(el.tagName==='SELECT') return el.value;
+  if(el.value==='' ) return null;
+  return parseFloat(el.value);
+}
+function getRaw(id){
+  const el = document.getElementById(id);
+  if(!el) return null;
+  if(el.type==='checkbox') return el.checked;
+  return el.value === '' ? null : el.value;
+}
+function saveDraft(){
+  const data = {};
+  FIELD_IDS.forEach(id=>{ data[id] = getRaw(id); });
+  localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
+}
+function loadDraft(){
+  const raw = localStorage.getItem(AUTOSAVE_KEY);
+  if(!raw) return;
+  try{
+    const data = JSON.parse(raw);
+    FIELD_IDS.forEach(id=>{
+      const el = document.getElementById(id);
+      if(!el || data[id]===null || data[id]===undefined) return;
+      if(el.type==='checkbox') el.checked = !!data[id];
+      else el.value = data[id];
+    });
+  }catch(e){}
+}
+FIELD_IDS.forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', ()=>{ saveDraft(); recalc(); });
+});
+loadDraft();
+
+/* ---------- scoring engine ---------- */
+function tier(value, bands){
+  // bands: array of {min,max,pts} evaluated with min<=|match|<max style already resolved by caller
+  for(const b of bands){
+    if(value>=b.min && value<b.max) return b.pts;
+  }
+  return 0;
+}
+
+function scoreGasoline(v){
+  const rows = []; // {label, pts, note}
+  let total = 0;
+  function add(label, pts, note){ if(pts!==0){ rows.push({label,pts,note}); total+=pts; } else { rows.push({label,pts:0,note:note||'no threshold met'}); } }
+
+  // 1. RBOB 24h
+  if(v.g_rbob_chg24h!==null){
+    const c = v.g_rbob_chg24h, a = Math.abs(c);
+    let pts=0;
+    if(a<2) pts=0;
+    else if(c>0) pts = a>=6?22:(a>=4?15:8);
+    else pts = -(a>=6?22:(a>=4?15:8));
+    add('1. RBOB 24h move ('+c.toFixed(2)+'¢)', pts);
+  } else add('1. RBOB 24h move', 0, 'Unavailable');
+
+  // 2. RBOB 3-session
+  if(v.g_rbob_chg3s!==null){
+    const c = v.g_rbob_chg3s, a = Math.abs(c);
+    let pts=0;
+    if(a>=8) pts = c>0?15:-15;
+    else if(a>=4) pts = c>0?8:-8;
+    add('2. RBOB 3-session trend ('+c.toFixed(2)+'¢)', pts);
+  } else add('2. RBOB 3-session trend', 0, 'Unavailable');
+
+  // 3. RBOB momentum
+  if(v.g_rbob_momentum==='up') add('3. RBOB momentum accelerating up', 5);
+  else if(v.g_rbob_momentum==='down') add('3. RBOB momentum accelerating down', -5);
+  else add('3. RBOB momentum', 0, 'not accelerating');
+
+  // 4. Twin Cities
+  if(v.g_tc_restoration!==null && v.g_tc_restoration>0 && v.g_tc_broad){
+    const c = v.g_tc_restoration;
+    let pts = c>=15?20:(c>=10?15:(c>=6?8:0));
+    add('4. Twin Cities broad restoration (+'+c.toFixed(1)+'¢)', pts, pts===0?'below 6¢ threshold':undefined);
+  } else if(v.g_tc_restoration!==null && v.g_tc_restoration>0 && !v.g_tc_broad){
+    add('4. Twin Cities restoration', 0, 'not confirmed broad/marketwide — not scored');
+  }
+  if(v.g_tc_decline35!==null && v.g_tc_decline35<=-8){
+    add('4b. Twin Cities broad decline (3–5 day)', -8);
+    if((v.g_rbob_chg24h!==null && v.g_rbob_chg24h<0) || (v.g_rbob_chg3s!==null && v.g_rbob_chg3s<0)){
+      add('4c. Twin Cities decline + RBOB also declining', -5);
+    }
+  }
+
+  // 5. Eau Claire / Chippewa Falls
+  if(v.g_ec_dir==='increase' && v.g_ec_mag!==null && !v.g_ec_naub_caught_up){
+    const m = v.g_ec_mag;
+    const pts = m>=10?20:(m>=6?12:(m>=3?5:0));
+    add('5. EC/Chippewa Falls broad increase ahead of New Auburn (+'+m.toFixed(1)+'¢)', pts, pts===0?'below 3¢ threshold':undefined);
+  } else if(v.g_ec_dir==='decrease' && !v.g_ec_naub_caught_up){
+    add('5. EC/Chippewa Falls falling, New Auburn still higher/unchanged', -10);
+  }
+
+  // 6. Catch-up
+  if(v.g_catchup==='up_lag') add('6. Gasoline catch-up: upstream up, local lagging', 15);
+  else if(v.g_catchup==='down_lag') add('6. Gasoline catch-up: upstream down, local lagging', -15);
+
+  // 7. Cycle position
+  if(v.g_cycle_bottom_precond && v.g_cycle_state==='turn') add('7. Cycle bottom + upstream turn', 15);
+  else if(v.g_cycle_bottom_precond && v.g_cycle_state==='still_falling') add('7. Cycle decline, wholesale still falling', -8);
+
+  // 8. PADD2 gasoline inventories
+  if(v.g_padd2_wow!==null){
+    const p = v.g_padd2_wow;
+    let pts = 0;
+    if(p<=-3) pts=7; else if(p<=-1) pts=3; else if(p>=3) pts=-7; else if(p>=1) pts=-3;
+    add('8. PADD2 gasoline inventory WoW ('+p.toFixed(1)+'%)', pts);
+    if(pts!==0 && v.g_padd2_consec){
+      add('8b. 3+ consecutive weeks same direction', pts>0?3:-3);
+    }
+  } else add('8. PADD2 gasoline inventory', 0, 'Unavailable');
+
+  // 9. Disruption
+  const dmap = {moderate:8, major:15, mod_restore:-5, major_restore:-10};
+  if(v.g_disruption!=='none') add('9. Refinery/pipeline event: '+v.g_disruption, dmap[v.g_disruption]);
+
+  // 10. Crude
+  if(v.brent_chg3s!==null){
+    const b = v.brent_chg3s;
+    let pts=0;
+    if(b>=5) pts=5; else if(b>=2) pts=2; else if(b<=-5) pts=-5; else if(b<=-2) pts=-2;
+    add('10. Brent 3-session ('+b.toFixed(2)+')', pts);
+  } else add('10. Crude oil', 0, 'Unavailable');
+
+  // overrides
+  const overrides = [];
+  const immediateBuy = (v.g_rbob_chg24h!==null && v.g_rbob_chg24h>=5) &&
+                        (v.g_tc_restoration!==null && v.g_tc_restoration>=10 && v.g_tc_broad) &&
+                        !v.g_ec_naub_caught_up;
+  if(immediateBuy) overrides.push({type:'buy', text:'Immediate BUY override: RBOB +5¢/24h, Twin Cities broad restoration ≥10¢, and Eau Claire/New Auburn has not yet caught up — classic upstream/local catch-up window.'});
+
+  const doNotChase = v.g_override_chase_local_jump && v.g_override_chase_tc_stopped &&
+                      (v.g_rbob_chg24h===null || v.g_rbob_chg24h<=0) && (v.g_rbob_chg3s===null || v.g_rbob_chg3s<=0);
+  if(doNotChase) overrides.push({type:'wait', text:'Do-not-chase override: local price already jumped ≥15¢ but RBOB is flat/falling and Twin Cities has stopped rising — the local market has likely already completed its restoration. Favor WAIT/NO EDGE unless other supply indicators remain strongly bullish.'});
+
+  // price jump warning triggers (need >=2)
+  let warnCount = 0;
+  if(v.g_rbob_chg24h!==null && v.g_rbob_chg24h>=5) warnCount++;
+  if(v.g_tc_restoration!==null && v.g_tc_restoration>=10 && v.g_tc_broad) warnCount++;
+  if(v.g_ec_dir==='increase' && v.g_ec_mag!==null && v.g_ec_mag>=6 && !v.g_ec_naub_caught_up) warnCount++;
+  if(v.g_disruption==='moderate' || v.g_disruption==='major') warnCount++;
+  const priceJumpWarning = warnCount>=2;
+
+  // confidence
+  const have = {
+    futures: v.g_rbob_chg24h!==null || v.g_rbob_now!==null,
+    localRetail: v.g_price_newauburn!==null || v.g_price_eauclaire!==null || v.g_price_chippewa!==null,
+    regionalRetail: v.g_price_twincities!==null || v.g_tc_restoration!==null,
+    eia: v.g_padd2_wow!==null,
+    news: !!v.g_news_checked
+  };
+  const missing = Object.values(have).filter(x=>!x).length;
+  let confidence;
+  if(!have.futures || !have.localRetail) confidence='Low';
+  else if(missing===0) confidence='High';
+  else if(missing<=2) confidence='Medium';
+  else confidence='Low';
+
+  return {total, rows, overrides, priceJumpWarning, confidence, have};
+}
+
+function scoreDiesel(v){
+  const rows = []; let total = 0;
+  function add(label, pts, note){ if(pts!==0){ rows.push({label,pts,note}); total+=pts; } else { rows.push({label,pts:0,note:note||'no threshold met'}); } }
+
+  // 1. ULSD 24h
+  if(v.d_ulsd_chg24h!==null){
+    const c=v.d_ulsd_chg24h, a=Math.abs(c);
+    let pts=0;
+    if(a<2) pts=0;
+    else if(c>0) pts = a>=6?25:(a>=4?16:8);
+    else pts = -(a>=6?25:(a>=4?16:8));
+    add('1. ULSD 24h move ('+c.toFixed(2)+'¢)', pts);
+  } else add('1. ULSD 24h move', 0, 'Unavailable');
+
+  // 2. ULSD 3-session
+  if(v.d_ulsd_chg3s!==null){
+    const c=v.d_ulsd_chg3s, a=Math.abs(c);
+    let pts=0;
+    if(a>=10) pts = c>0?20:-20; else if(a>=5) pts = c>0?10:-10;
+    add('2. ULSD 3-session trend ('+c.toFixed(2)+'¢)', pts);
+  } else add('2. ULSD 3-session trend', 0, 'Unavailable');
+
+  // 3. momentum
+  if(v.d_ulsd_trend==='up3'){ add('3. ULSD risen ≥3 consecutive sessions', 5); if(v.d_ulsd_accel) add('3b. Accelerating sharply', 3); }
+  else if(v.d_ulsd_trend==='down3'){ add('3. ULSD fallen ≥3 consecutive sessions', -5); if(v.d_ulsd_accel) add('3b. Accelerating sharply', -3); }
+
+  // 4. catch-up
+  if(v.d_catchup==='up_lag') add('4. Diesel catch-up: ULSD up, local lagging', 15);
+  else if(v.d_catchup==='down_lag') add('4. Diesel catch-up: ULSD down, local unchanged', -15);
+
+  // 5. EC/WI diesel
+  if(v.d_ec_dir==='increase' && v.d_ec_mag!==null){
+    const m=v.d_ec_mag; add('5. EC/WI diesel increase (+'+m.toFixed(1)+'¢)', m>=10?12:(m>=5?6:0));
+  } else if(v.d_ec_dir==='decrease' && v.d_ec_mag!==null){
+    const m=v.d_ec_mag; add('5. EC/WI diesel decrease (−'+m.toFixed(1)+'¢)', -(m>=10?12:(m>=5?6:0)));
+  }
+
+  // 6. PADD2 distillate
+  if(v.d_padd2_wow!==null){
+    const p=v.d_padd2_wow; let pts=0;
+    if(p<=-3) pts=10; else if(p<=-1) pts=5; else if(p>=3) pts=-10; else if(p>=1) pts=-5;
+    add('6. PADD2 distillate inventory WoW ('+p.toFixed(1)+'%)', pts);
+    if(pts!==0 && v.d_padd2_consec) add('6b. 3 consecutive weeks same direction', pts>0?5:-5);
+  } else add('6. PADD2 distillate inventory', 0, 'Unavailable');
+
+  // 7. crack spread
+  if(v.d_crack==='ulsd_up') add('7. Diesel crack spread widening (ULSD up, crude flat/down)', 8);
+  else if(v.d_crack==='ulsd_down') add('7. Diesel crack spread narrowing (ULSD down, crude up)', -8);
+
+  // 8. disruption
+  const dmap = {moderate:8, major:15, mod_restore:-5, major_restore:-10};
+  if(v.d_disruption!=='none') add('8. Refinery/pipeline event: '+v.d_disruption, dmap[v.d_disruption]);
+
+  // 9. crude
+  if(v.brent_chg3s!==null){
+    const b=v.brent_chg3s; let pts=0;
+    if(b>=5) pts=5; else if(b>=2) pts=2; else if(b<=-5) pts=-5; else if(b<=-2) pts=-2;
+    add('9. Brent 3-session ('+b.toFixed(2)+')', pts);
+  } else add('9. Crude oil', 0, 'Unavailable');
+
+  // 10. seasonal
+  if(v.d_seasonal==='elevated') add('10. Seasonal demand elevated + draws/rising ULSD', 4);
+  else if(v.d_seasonal==='weak') add('10. Seasonal demand weak + inventory builds', -4);
+
+  // price jump warning (>=2 of 4)
+  let warnCount = 0;
+  if(v.d_ulsd_chg24h!==null && v.d_ulsd_chg24h>=6) warnCount++;
+  if(v.d_ulsd_chg3s!==null && v.d_ulsd_chg3s>=10) warnCount++;
+  if(v.d_disruption==='moderate' || v.d_disruption==='major') warnCount++;
+  if(v.d_padd2_wow!==null && v.d_padd2_wow<=-3 && v.d_ulsd_chg24h!==null && v.d_ulsd_chg24h>0) warnCount++;
+  const priceJumpWarning = warnCount>=2;
+
+  const have = {
+    futures: v.d_ulsd_chg24h!==null || v.d_ulsd_now!==null,
+    localRetail: v.d_price_newauburn!==null || v.d_price_eauclaire!==null || v.d_price_chippewa!==null,
+    regionalRetail: v.d_price_twincities!==null,
+    eia: v.d_padd2_wow!==null,
+    news: !!v.d_news_checked
+  };
+  const missing = Object.values(have).filter(x=>!x).length;
+  let confidence;
+  if(!have.futures || !have.localRetail) confidence='Low';
+  else if(missing===0) confidence='High';
+  else if(missing<=2) confidence='Medium';
+  else confidence='Low';
+
+  return {total, rows, overrides:[], priceJumpWarning, confidence, have};
+}
+
+function decisionFor(score){
+  if(score>=40) return 'BUY TODAY';
+  if(score>=25) return 'BUY SOON';
+  if(score>=10) return 'SLIGHT BUY BIAS';
+  if(score>=-9) return 'NO CLEAR EDGE';
+  if(score>=-24) return 'WAIT 24–48 HOURS';
+  if(score>=-39) return 'WAIT 2–4 DAYS';
+  return 'STRONG WAIT';
+}
+function decisionClass(score){
+  if(score>=10) return 'buy';
+  if(score<=-10) return 'wait';
+  return 'neutral';
+}
+function arrow24(score){ return score>=10?'↑':(score<=-10?'↓':'→'); }
+function arrow7(score, consecFlag){
+  if(Math.abs(score)>=25 || consecFlag) return arrow24(score);
+  return '→';
+}
+
+function collectInputs(){
+  const v = {};
+  FIELD_IDS.forEach(id=>{ v[id]=getVal(id); });
+  return v;
+}
+
+let lastGas=null, lastDiesel=null, lastInputs=null;
+
+function recalc(){
+  const v = collectInputs();
+  lastInputs = v;
+  const gas = scoreGasoline(v);
+  const diesel = scoreDiesel(v);
+  lastGas = gas; lastDiesel = diesel;
+
+  document.getElementById('gasScoreOut').textContent = (gas.total>0?'+':'')+gas.total;
+  document.getElementById('dieselScoreOut').textContent = (diesel.total>0?'+':'')+diesel.total;
+
+  let gasDecisionLabel = decisionFor(gas.total);
+  if(gas.overrides.some(o=>o.type==='buy') && gas.total<40) gasDecisionLabel += ' (upstream catch-up override)';
+  if(gas.overrides.some(o=>o.type==='wait') && gas.total>0) gasDecisionLabel += ' (do-not-chase override — lean WAIT)';
+
+  const gEl = document.getElementById('gasDecisionText');
+  gEl.textContent = gasDecisionLabel;
+  gEl.className = 'decision ' + decisionClass(gas.total);
+
+  const dEl = document.getElementById('dieselDecisionText');
+  dEl.textContent = decisionFor(diesel.total);
+  dEl.className = 'decision ' + decisionClass(diesel.total);
+
+  document.getElementById('gasConfOut').innerHTML = '<span class="conf-'+gas.confidence+'">'+gas.confidence+'</span>';
+  document.getElementById('dieselConfOut').innerHTML = '<span class="conf-'+diesel.confidence+'">'+diesel.confidence+'</span>';
+
+  const g24 = arrow24(gas.total), g7 = arrow7(gas.total, v.g_padd2_consec);
+  const d24 = arrow24(diesel.total), d7 = arrow7(diesel.total, v.d_padd2_consec);
+  document.getElementById('gasOutlook24').innerHTML = arrowSpan(g24);
+  document.getElementById('gasOutlook7').innerHTML = arrowSpan(g7);
+  document.getElementById('dieselOutlook24').innerHTML = arrowSpan(d24);
+  document.getElementById('dieselOutlook7').innerHTML = arrowSpan(d7);
+
+  const banner = document.getElementById('alertBanner');
+  if(gas.priceJumpWarning || diesel.priceJumpWarning){
+    banner.style.display='block';
+    let parts=[];
+    if(gas.priceJumpWarning) parts.push('Gasoline');
+    if(diesel.priceJumpWarning) parts.push('Diesel');
+    banner.innerHTML = '<b>⚠ PRICE JUMP WARNING</b> — '+parts.join(' & ')+' shows an unusually high probability of a local retail increase within 24–48 hours based on at least two triggered indicators.';
+  } else {
+    banner.style.display='none';
+  }
+}
+function arrowSpan(a){
+  const cls = a==='↑'?'arrow-up':(a==='↓'?'arrow-down':'arrow-flat');
+  return '<span class="'+cls+'">'+a+'</span>';
+}
+
+/* ---------- magnitude estimate heuristic ---------- */
+function magnitudeEstimate(fuel, v, scoreObj){
+  const isGas = fuel==='gas';
+  const catchup = isGas ? v.g_catchup : v.d_catchup;
+  const localPrice = isGas ? (v.g_price_newauburn ?? v.g_price_chippewa ?? v.g_price_eauclaire) : (v.d_price_newauburn ?? v.d_price_chippewa ?? v.d_price_eauclaire);
+  const upstreamPrice = isGas ? (v.g_price_eauclaire ?? v.g_price_twincities) : (v.d_price_eauclaire ?? v.d_price_twincities);
+  const wholesale24 = isGas ? v.g_rbob_chg24h : v.d_ulsd_chg24h;
+  const wholesale3s = isGas ? v.g_rbob_chg3s : v.d_ulsd_chg3s;
+
+  if((catchup==='up_lag') && localPrice!==null && upstreamPrice!==null && upstreamPrice>localPrice){
+    const gap = (upstreamPrice-localPrice)*100;
+    return {risk: gap.toFixed(1)+'¢/gal (based on the current Eau Claire/Twin Cities – New Auburn price gap, which has not yet passed through)', benefit:null};
+  }
+  if((catchup==='down_lag') && localPrice!==null && upstreamPrice!==null && localPrice>upstreamPrice){
+    const gap = (localPrice-upstreamPrice)*100;
+    return {risk:null, benefit: gap.toFixed(1)+'¢/gal (based on the current New Auburn – Eau Claire/Twin Cities price gap, which may still pass through)'};
+  }
+  if(scoreObj.total>=10 && wholesale24!==null){
+    const lo=(Math.abs(wholesale24)*0.5).toFixed(1), hi=Math.abs(wholesale24).toFixed(1);
+    return {risk: lo+'–'+hi+'¢/gal (rough estimate assuming partial pass-through of the recent futures move)', benefit:null};
+  }
+  if(scoreObj.total<=-10 && wholesale24!==null){
+    const lo=(Math.abs(wholesale24)*0.5).toFixed(1), hi=Math.abs(wholesale24).toFixed(1);
+    return {risk:null, benefit: lo+'–'+hi+'¢/gal (rough estimate assuming partial pass-through of the recent futures move)'};
+  }
+  return {risk:null, benefit:null};
+}
+
+/* ---------- report generation ---------- */
+function topFactors(scoreObj, n){
+  return scoreObj.rows.filter(r=>r.pts!==0).sort((a,b)=>Math.abs(b.pts)-Math.abs(a.pts)).slice(0,n);
+}
+function effectLabel(pts){ return pts>0?'Bullish':(pts<0?'Bearish':'Neutral'); }
+
+function buildReport(){
+  const v = collectInputs();
+  const gas = scoreGasoline(v);
+  const diesel = scoreDiesel(v);
+  const dateLabel = fmtNow();
+
+  let out = '';
+  if(gas.priceJumpWarning || diesel.priceJumpWarning){
+    let parts=[]; if(gas.priceJumpWarning) parts.push('GASOLINE'); if(diesel.priceJumpWarning) parts.push('DIESEL');
+    out += '⚠ PRICE JUMP WARNING — '+parts.join(' & ')+'\n\n';
+  }
+
+  out += '# Fuel Buy/Wait Report — '+dateLabel+'\n\n';
+  const gDec = decisionFor(gas.total), dDec = decisionFor(diesel.total);
+  const gArr24 = arrow24(gas.total), gArr7 = arrow7(gas.total, v.g_padd2_consec);
+  const dArr24 = arrow24(diesel.total), dArr7 = arrow7(diesel.total, v.d_padd2_consec);
+
+  out += '| Fuel | Decision | 24–48 hr outlook | 3–7 day outlook | Score | Confidence |\n';
+  out += '|---|---|---|---|---:|---|\n';
+  out += '| Gasoline | '+gDec+' | '+gArr24+' | '+gArr7+' | '+(gas.total>0?'+':'')+gas.total+' | '+gas.confidence+' |\n';
+  out += '| Diesel | '+dDec+' | '+dArr24+' | '+dArr7+' | '+(diesel.total>0?'+':'')+diesel.total+' | '+diesel.confidence+' |\n\n';
+
+  out += '## Bottom Line\n\n';
+  out += 'Gasoline: '+bottomLineText('gas', gas, v)+'\n\n';
+  out += 'Diesel: '+bottomLineText('diesel', diesel, v)+'\n\n';
+
+  const gMag = magnitudeEstimate('gas', v, gas);
+  const dMag = magnitudeEstimate('diesel', v, diesel);
+  out += '### Gasoline magnitude\n';
+  out += 'Risk of increase within 48 hours: '+(gMag.risk ? 'approximately '+gMag.risk : 'Unavailable — insufficient data to estimate a range')+'\n';
+  out += 'Potential benefit from waiting: '+(gMag.benefit ? 'approximately '+gMag.benefit : 'Unavailable — insufficient data to estimate a range')+'\n\n';
+  out += '### Diesel magnitude\n';
+  out += 'Risk of increase within 48 hours: '+(dMag.risk ? 'approximately '+dMag.risk : 'Unavailable — insufficient data to estimate a range')+'\n';
+  out += 'Potential benefit from waiting: '+(dMag.benefit ? 'approximately '+dMag.benefit : 'Unavailable — insufficient data to estimate a range')+'\n\n';
+
+  out += '## Why\n\n**Gasoline** (top factors):\n';
+  topFactors(gas,3).forEach((f,i)=>{ out += (i+1)+'. '+f.label+' → '+(f.pts>0?'+':'')+f.pts+'\n'; });
+  gas.overrides.forEach(o=> out += '- Override: '+o.text+'\n');
+  out += '\n**Diesel** (top factors):\n';
+  topFactors(diesel,3).forEach((f,i)=>{ out += (i+1)+'. '+f.label+' → '+(f.pts>0?'+':'')+f.pts+'\n'; });
+  out += '\n';
+
+  out += '## Current Signals\n\n';
+  out += '| Signal | Current reading | Change | Effect |\n|---|---:|---:|---|\n';
+  out += evidenceRow('RBOB', v.g_rbob_now, '$'+fmt4(v.g_rbob_now)+'/gal', v.g_rbob_chg24h, '¢/24h', gas.rows[0]?.pts);
+  out += evidenceRow('ULSD', v.d_ulsd_now, '$'+fmt4(v.d_ulsd_now)+'/gal', v.d_ulsd_chg24h, '¢/24h', diesel.rows[0]?.pts);
+  out += evidenceRow('Brent', v.brent_now, '$'+fmt2(v.brent_now)+'/bbl', v.brent_chg3s, '$/3-session', undefined);
+  out += evidenceRow('New Auburn gas', v.g_price_newauburn, '$'+fmt3(v.g_price_newauburn), null, '', undefined);
+  out += evidenceRow('Eau Claire gas', v.g_price_eauclaire, '$'+fmt3(v.g_price_eauclaire), v.g_ec_mag, '¢ ('+v.g_ec_dir+')', undefined);
+  out += evidenceRow('Twin Cities gas', v.g_price_twincities, '$'+fmt3(v.g_price_twincities), v.g_tc_restoration, '¢/24h', undefined);
+  out += evidenceRow('New Auburn diesel', v.d_price_newauburn, '$'+fmt3(v.d_price_newauburn), null, '', undefined);
+  out += evidenceRow('Eau Claire diesel', v.d_price_eauclaire, '$'+fmt3(v.d_price_eauclaire), v.d_ec_mag, '¢ ('+v.d_ec_dir+')', undefined);
+  out += evidenceRow('PADD 2 gasoline stocks WoW', v.g_padd2_wow, fmtPct(v.g_padd2_wow), null, '', v.g_padd2_wow!==null?(v.g_padd2_wow<0?1:-1):undefined);
+  out += evidenceRow('PADD 2 distillate stocks WoW', v.d_padd2_wow, fmtPct(v.d_padd2_wow), null, '', v.d_padd2_wow!==null?(v.d_padd2_wow<0?1:-1):undefined);
+  out += '\nSource: user-entered, per links in Sources & Methodology. Record source timestamps there.\n\n';
+
+  out += '## Full Score Breakdown\n\n**Gasoline** — GAS_SCORE = '+gas.total+'\n';
+  gas.rows.forEach(r=> out += '- '+r.label+': '+(r.pts>0?'+':'')+r.pts+(r.note?' ('+r.note+')':'')+'\n');
+  out += '\n**Diesel** — DIESEL_SCORE = '+diesel.total+'\n';
+  diesel.rows.forEach(r=> out += '- '+r.label+': '+(r.pts>0?'+':'')+r.pts+(r.note?' ('+r.note+')':'')+'\n');
+
+  return out;
+}
+function bottomLineText(fuel, scoreObj, v){
+  const dec = decisionFor(scoreObj.total);
+  const top = topFactors(scoreObj,2).map(f=>f.label.replace(/^\d+[ab]?\.\s*/,'')).join('; ');
+  let base = dec+' — '+(top || 'no single indicator dominates; data is limited');
+  if(scoreObj.overrides && scoreObj.overrides.length){
+    base += '. ' + scoreObj.overrides.map(o=>o.text).join(' ');
+  }
+  if(scoreObj.confidence==='Low') base += ' (Low confidence — key inputs are missing; treat this as directional only.)';
+  return base+'.';
+}
+function fmt4(x){ return x===null||x===undefined?'?':x.toFixed(4); }
+function fmt3(x){ return x===null||x===undefined?'?':x.toFixed(3); }
+function fmt2(x){ return x===null||x===undefined?'?':x.toFixed(2); }
+function fmtPct(x){ return x===null||x===undefined?'?':(x>0?'+':'')+x.toFixed(1)+'%'; }
+function evidenceRow(name, current, currentStr, change, changeUnit, effectPts){
+  const cur = current===null||current===undefined ? 'Unavailable' : currentStr;
+  const chg = change===null||change===undefined ? '—' : ((change>0?'+':'')+change+(changeUnit? ' '+changeUnit:''));
+  const eff = effectPts===undefined ? 'Neutral' : effectLabel(effectPts);
+  return '| '+name+' | '+cur+' | '+chg+' | '+eff+' |\n';
+}
+
+function generateReport(){
+  const out = buildReport();
+  const box = document.getElementById('reportOut');
+  box.textContent = out;
+  box.style.display = 'block';
+  box.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+function copyReport(){
+  const box = document.getElementById('reportOut');
+  if(box.style.display==='none') generateReport();
+  navigator.clipboard.writeText(document.getElementById('reportOut').textContent).then(()=>{
+    alertToast('Report copied to clipboard.');
+  }).catch(()=>{ alertToast('Copy failed — select and copy manually.'); });
+}
+function downloadReport(){
+  const box = document.getElementById('reportOut');
+  if(box.style.display==='none') generateReport();
+  const blob = new Blob([document.getElementById('reportOut').textContent], {type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'fuel-report-'+new Date().toISOString().slice(0,10)+'.md';
+  a.click();
+}
+function alertToast(msg){
+  const banner = document.getElementById('alertBanner');
+  const prevDisplay = banner.style.display, prevHtml = banner.innerHTML;
+  banner.style.display='block'; banner.innerHTML = msg;
+  setTimeout(()=>{ banner.style.display=prevDisplay; banner.innerHTML=prevHtml; recalc(); }, 1800);
+}
+function clearForm(){
+  if(!confirm('Clear all entered data on this form?')) return;
+  FIELD_IDS.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    if(el.type==='checkbox') el.checked=false;
+    else if(el.tagName==='SELECT') el.selectedIndex=0;
+    else el.value='';
+  });
+  localStorage.removeItem(AUTOSAVE_KEY);
+  document.getElementById('reportOut').style.display='none';
+  recalc();
+}
+
+/* ---------- history ---------- */
+function loadHistory(){
+  try{ return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }catch(e){ return []; }
+}
+function saveHistoryArr(arr){ localStorage.setItem(HISTORY_KEY, JSON.stringify(arr)); }
+
+function saveToHistory(){
+  const v = collectInputs();
+  const gas = scoreGasoline(v);
+  const diesel = scoreDiesel(v);
+  const entry = {
+    id: 'h'+Date.now(),
+    savedAt: new Date().toISOString(),
+    reportDateLabel: fmtNow(),
+    gas: {
+      score: gas.total, decision: decisionFor(gas.total), confidence: gas.confidence,
+      todayPrice: v.g_price_newauburn ?? v.g_price_chippewa ?? v.g_price_eauclaire ?? null,
+      rbob: v.g_rbob_now
+    },
+    diesel: {
+      score: diesel.total, decision: decisionFor(diesel.total), confidence: diesel.confidence,
+      todayPrice: v.d_price_newauburn ?? v.d_price_chippewa ?? v.d_price_eauclaire ?? null,
+      ulsd: v.d_ulsd_now
+    },
+    actuals: {gas24:null, gas48:null, gas7d:null, diesel24:null, diesel48:null, diesel7d:null},
+    fullReport: buildReport()
+  };
+  const arr = loadHistory();
+  arr.unshift(entry);
+  saveHistoryArr(arr);
+  alertToast('Saved to history ('+arr.length+' total observations).');
+  renderHistory();
+}
+
+function outcomeLabel(score, todayPrice, actual){
+  if(todayPrice===null || actual===null || actual===undefined || isNaN(actual)) return {text:'—', cls:''};
+  const diff = actual - todayPrice;
+  if(score>=10){
+    const savedCents = diff*100;
+    return {text: (savedCents>=0?'+':'')+savedCents.toFixed(1)+'¢ vs. today — '+(savedCents>0?'BUY was right':'price fell, BUY was early'), cls: savedCents>0?'good':'bad'};
+  } else if(score<=-10){
+    const savedCents = -diff*100;
+    return {text: (savedCents>=0?'+':'')+savedCents.toFixed(1)+'¢ saved by waiting — '+(savedCents>0?'WAIT was right':'price rose, WAIT cost money'), cls: savedCents>0?'good':'bad'};
+  }
+  return {text:'no clear edge called', cls:''};
+}
+
+function renderHistory(){
+  const arr = loadHistory();
+  const wrap = document.getElementById('historyTableWrap');
+  if(arr.length===0){ wrap.innerHTML = '<p class="note muted">No saved reports yet.</p>'; return; }
+  let html = '<table class="histtable"><thead><tr><th>Saved</th><th>Gasoline</th><th>Diesel</th><th>Actions</th></tr></thead><tbody>';
+  arr.forEach(e=>{
+    html += '<tr>';
+    html += '<td>'+e.reportDateLabel+'</td>';
+    html += '<td>'+e.gas.decision+' <span class="badge">'+e.gas.score+'</span><br><span class="note muted">conf: '+e.gas.confidence+'</span></td>';
+    html += '<td>'+e.diesel.decision+' <span class="badge">'+e.diesel.score+'</span><br><span class="note muted">conf: '+e.diesel.confidence+'</span></td>';
+    html += '<td><button class="mini-btn" onclick="toggleActuals(\''+e.id+'\')">Log actuals</button> ';
+    html += '<button class="mini-btn" onclick="viewReport(\''+e.id+'\')">View</button> ';
+    html += '<button class="mini-btn" onclick="deleteEntry(\''+e.id+'\')">Delete</button>';
+    html += '<div class="actuals-form" id="actuals-'+e.id+'">'
+      + actualField('Gas 24h $', e.id, 'gas24', e.actuals.gas24)
+      + actualField('Gas 48h $', e.id, 'gas48', e.actuals.gas48)
+      + actualField('Gas 7d $', e.id, 'gas7d', e.actuals.gas7d)
+      + actualField('Diesel 24h $', e.id, 'diesel24', e.actuals.diesel24)
+      + actualField('Diesel 48h $', e.id, 'diesel48', e.actuals.diesel48)
+      + actualField('Diesel 7d $', e.id, 'diesel7d', e.actuals.diesel7d)
+      + '</div>';
+    if(e.actuals.gas24!==null || e.actuals.gas48!==null || e.actuals.gas7d!==null || e.actuals.diesel24!==null || e.actuals.diesel48!==null || e.actuals.diesel7d!==null){
+      html += '<div class="note muted" style="margin-top:0.3rem;">';
+      ['gas24','gas48','gas7d'].forEach(k=>{
+        if(e.actuals[k]!==null){ const o=outcomeLabel(e.gas.score, e.gas.todayPrice, e.actuals[k]); html += k+': '+o.text+'<br>'; }
+      });
+      ['diesel24','diesel48','diesel7d'].forEach(k=>{
+        if(e.actuals[k]!==null){ const o=outcomeLabel(e.diesel.score, e.diesel.todayPrice, e.actuals[k]); html += k+': '+o.text+'<br>'; }
+      });
+      html += '</div>';
+    }
+    html += '</td></tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+function actualField(label, id, key, val){
+  return '<div><label>'+label+'</label><input type="number" step="0.001" value="'+(val===null?'':val)+'" onchange="setActual(\''+id+'\',\''+key+'\',this.value)"></div>';
+}
+function toggleActuals(id){
+  const el = document.getElementById('actuals-'+id);
+  el.classList.toggle('open');
+}
+function setActual(id, key, value){
+  const arr = loadHistory();
+  const e = arr.find(x=>x.id===id);
+  if(!e) return;
+  e.actuals[key] = value===''?null:parseFloat(value);
+  saveHistoryArr(arr);
+  renderHistory();
+}
+function viewReport(id){
+  const arr = loadHistory();
+  const e = arr.find(x=>x.id===id);
+  if(!e) return;
+  const box = document.getElementById('reportOut');
+  box.textContent = e.fullReport;
+  box.style.display='block';
+  document.querySelector('.tab-btn[data-tab="assess"]').click();
+  box.scrollIntoView({behavior:'smooth'});
+}
+function deleteEntry(id){
+  if(!confirm('Delete this saved observation?')) return;
+  let arr = loadHistory();
+  arr = arr.filter(x=>x.id!==id);
+  saveHistoryArr(arr);
+  renderHistory();
+}
+function clearHistory(){
+  if(!confirm('Delete ALL saved history? This cannot be undone.')) return;
+  localStorage.removeItem(HISTORY_KEY);
+  renderHistory();
+}
+function exportHistoryJSON(){
+  const arr = loadHistory();
+  const blob = new Blob([JSON.stringify(arr,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'fuel-history.json'; a.click();
+}
+function exportHistoryCSV(){
+  const arr = loadHistory();
+  const cols = ['savedAt','reportDateLabel','gas.score','gas.decision','gas.confidence','gas.todayPrice','diesel.score','diesel.decision','diesel.confidence','diesel.todayPrice','actuals.gas24','actuals.gas48','actuals.gas7d','actuals.diesel24','actuals.diesel48','actuals.diesel7d'];
+  function get(o,path){ return path.split('.').reduce((a,k)=>a&&a[k]!==undefined?a[k]:'', o); }
+  let csv = cols.join(',')+'\n';
+  arr.forEach(e=>{ csv += cols.map(c=>{ let val = get(e,c); if(val===null||val===undefined) val=''; return '"'+String(val).replace(/"/g,'""')+'"'; }).join(',')+'\n'; });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'fuel-history.csv'; a.click();
+}
+function importHistoryJSON(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const imported = JSON.parse(reader.result);
+      if(!Array.isArray(imported)) throw new Error('bad format');
+      const existing = loadHistory();
+      const merged = existing.concat(imported.filter(i=>!existing.some(e=>e.id===i.id)));
+      saveHistoryArr(merged);
+      renderHistory();
+      alertToast('Imported '+imported.length+' entries.');
+    }catch(e){ alert('Could not import: '+e.message); }
+  };
+  reader.readAsText(file);
+  evt.target.value='';
+}
+
+recalc();
+renderHistory();
+</script>
+</body>
+</html>
