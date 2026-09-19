@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "Wisconsin Fuel Agent — Data Capture",
+  "version": "1.0.0",
+  "description": "Captures RBOB/ULSD/crude futures, EIA inventories, and regional retail gas & diesel prices as you browse each source, then autofills the Wisconsin Fuel Buy/Wait report form.",
+  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  },
+  "background": { "service_worker": "background.js" },
+  "permissions": ["storage", "scripting", "tabs"],
+  "host_permissions": [
+    "https://www.marketwatch.com/*",
+    "https://www.eia.gov/*",
+    "https://gasprices.aaa.com/*",
+    "https://www.gasbuddy.com/*",
+    "https://oilprice.com/*",
+    "https://jonpederson.github.io/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.marketwatch.com/investing/future/*",
+        "https://www.eia.gov/dnav/pet/*",
+        "https://www.eia.gov/petroleum/gasdiesel/*",
+        "https://gasprices.aaa.com/*",
+        "https://www.gasbuddy.com/gasprices/*",
+        "https://oilprice.com/oil-price-charts*"
+      ],
+      "js": ["shared.js", "content-capture.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://jonpederson.github.io/fuel/*"],
+      "js": ["shared.js", "content-fill.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

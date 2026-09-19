@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Fuel Agent Capture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <h1>Fuel Agent <em>Capture</em></h1>
+    <div class="sub">Browse each source once &mdash; confirm what was found &mdash; autofill the report.</div>
+  </header>
+
+  <section id="pendingSection">
+    <h2>Needs review <span class="count" id="pendingCount">0</span></h2>
+    <div id="pendingList" class="list"><p class="empty">Nothing waiting. Visit a source site to capture data.</p></div>
+    <div id="failuresList" class="failures"></div>
+  </section>
+
+  <section id="capturedSection">
+    <h2>Captured data</h2>
+    <div id="capturedList" class="list"></div>
+  </section>
+
+  <section id="linksSection">
+    <h2>Open a source</h2>
+    <div id="quickLinks" class="linkgrid"></div>
+  </section>
+
+  <div class="actions">
+    <button class="btn primary" id="autofillBtn">Autofill Wisconsin Fuel Report</button>
+    <button class="btn secondary" id="openAppBtn">Open report</button>
+    <button class="btn danger" id="clearBtn">Clear all captured data</button>
+  </div>
+
+  <p class="footnote">This only fills numeric/price fields it has real captured data for. Broad-move confirmation, the catch-up/cycle-position selects, refinery &amp; pipeline news, crack-spread, and seasonal context always need your own judgment &mdash; the report form still walks you through those.</p>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="shared.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -492,7 +492,7 @@
     </div>
   </div>
 
-  <footer>Wisconsin Fuel Buy/Wait Agent &middot; runs entirely in your browser &middot; data stays in localStorage</footer>
+  <footer>Wisconsin Fuel Buy/Wait Agent &middot; runs entirely in your browser &middot; data stays in localStorage &middot; <a href="https://github.com/jonpederson/jonpederson.github.io/tree/main/fuel/extension" target="_blank" rel="noopener">install the capture extension</a></footer>
 </div>
 
 <script>
@@ -557,6 +557,11 @@ const FIELD_IDS = [
 ];
 const AUTOSAVE_KEY = 'fuelAgentDraft_v1';
 const HISTORY_KEY = 'fuelAgentHistory_v1';
+
+/* Feature-detect hook for the companion browser extension: lets it confirm
+   it's on a compatible version of this page and know the exact field ids
+   without hardcoding a duplicate list. */
+window.FUEL_AGENT_APP = { version: 1, fieldIds: FIELD_IDS };
 
 function getVal(id){
   const el = document.getElementById(id);
