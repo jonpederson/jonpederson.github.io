@@ -1,0 +1,73 @@
+:root{
+  --ink:#0f0e0c; --paper:#f5f0e8; --accent:#c8401a; --good:#3d7a3d; --bad:#c8401a;
+  --muted:#8a8070; --rule:#d6cfc2; --card:#fffdf9; --mono:'DM Mono',monospace; --serif:'Fraunces',Georgia,serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{
+  width:400px; max-height:600px; overflow-y:auto;
+  background:var(--paper); color:var(--ink); font-family:var(--mono);
+  -webkit-font-smoothing:antialiased;
+}
+header{padding:1rem 1.1rem 0.85rem; border-bottom:1px solid var(--rule);}
+header h1{font-family:var(--serif); font-weight:400; font-size:1.3rem;}
+header h1 em{font-style:italic; color:var(--accent);}
+header .sub{font-size:0.68rem; color:var(--muted); margin-top:0.3rem; line-height:1.4;}
+
+section{padding:0.85rem 1.1rem; border-bottom:1px solid var(--rule);}
+section h2{font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:0.55rem; display:flex; align-items:center; gap:0.4rem;}
+.count{background:var(--accent); color:var(--paper); font-size:0.62rem; padding:0.05rem 0.4rem; border-radius:2px;}
+
+.empty{font-size:0.72rem; color:var(--muted); line-height:1.5;}
+
+.list{display:flex; flex-direction:column; gap:0.5rem;}
+
+.pending-item{background:var(--card); border:1px solid var(--rule); padding:0.55rem 0.65rem;}
+.pending-item.suspect{border-color:var(--accent);}
+.pending-item .top{display:flex; justify-content:space-between; align-items:baseline; gap:0.5rem;}
+.pending-item .field-label{font-size:0.74rem; font-weight:500;}
+.pending-item .src{font-size:0.6rem; color:var(--muted); margin-top:0.15rem; word-break:break-all;}
+.pending-item .raw{font-size:0.62rem; color:var(--muted); margin-top:0.2rem; font-style:italic;}
+.pending-item .warn{font-size:0.62rem; color:var(--accent); margin-top:0.2rem;}
+.pending-item .row2{display:flex; gap:0.4rem; margin-top:0.5rem; align-items:center;}
+.pending-item input[type=number]{width:80px; padding:0.3rem; font-family:var(--mono); font-size:0.75rem; border:1px solid var(--rule); background:var(--paper);}
+
+.mini{font-family:var(--mono); font-size:0.62rem; letter-spacing:0.05em; text-transform:uppercase; border:1px solid var(--rule); background:none; padding:0.3rem 0.55rem; cursor:pointer;}
+.mini:hover{border-color:var(--ink);}
+.mini.accept{border-color:var(--good); color:var(--good);}
+.mini.accept:hover{background:var(--good); color:var(--paper);}
+.mini.reject{border-color:var(--bad); color:var(--bad);}
+.mini.reject:hover{background:var(--bad); color:var(--paper);}
+
+.failures{margin-top:0.5rem;}
+.failures .fail-item{font-size:0.6rem; color:var(--muted); padding:0.2rem 0; border-top:1px dashed var(--rule);}
+
+table.captable{width:100%; border-collapse:collapse; font-size:0.66rem;}
+table.captable th, table.captable td{text-align:left; padding:0.3rem 0.3rem; border-bottom:1px solid var(--rule); vertical-align:top;}
+table.captable th{color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; font-size:0.56rem;}
+table.captable td.num{text-align:right; white-space:nowrap;}
+.age-stale{color:var(--accent);}
+.delta-pos{color:var(--bad);} .delta-neg{color:var(--good);}
+
+.linkgrid{display:grid; grid-template-columns:1fr 1fr; gap:0.35rem;}
+.linkgrid button{
+  text-align:left; background:var(--card); border:1px solid var(--rule); color:var(--ink);
+  font-family:var(--mono); font-size:0.62rem; padding:0.45rem 0.5rem; cursor:pointer; line-height:1.3;
+}
+.linkgrid button:hover{border-color:var(--accent); color:var(--accent);}
+
+.actions{padding:0.9rem 1.1rem; display:flex; flex-direction:column; gap:0.5rem;}
+.btn{font-family:var(--mono); font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; padding:0.65rem; border:none; cursor:pointer;}
+.btn.primary{background:var(--ink); color:var(--paper);}
+.btn.primary:hover{background:var(--accent);}
+.btn.secondary{background:transparent; border:1px solid var(--rule); color:var(--ink);}
+.btn.secondary:hover{border-color:var(--ink);}
+.btn.danger{background:transparent; border:1px solid var(--rule); color:var(--muted); font-size:0.64rem; padding:0.5rem;}
+.btn.danger:hover{border-color:var(--bad); color:var(--bad);}
+
+.footnote{padding:0 1.1rem 1rem; font-size:0.62rem; color:var(--muted); line-height:1.5;}
+
+.toast{
+  display:none; position:fixed; left:1rem; right:1rem; bottom:1rem;
+  background:var(--ink); color:var(--paper); padding:0.6rem 0.8rem; font-size:0.68rem;
+  border-left:3px solid var(--accent); line-height:1.4;
+}

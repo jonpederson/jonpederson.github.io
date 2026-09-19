@@ -558,6 +558,11 @@ const FIELD_IDS = [
 const AUTOSAVE_KEY = 'fuelAgentDraft_v1';
 const HISTORY_KEY = 'fuelAgentHistory_v1';
 
+/* Feature-detect hook for the companion browser extension: lets it confirm
+   it's on a compatible version of this page and know the exact field ids
+   without hardcoding a duplicate list. */
+window.FUEL_AGENT_APP = { version: 1, fieldIds: FIELD_IDS };
+
 function getVal(id){
   const el = document.getElementById(id);
   if(!el) return null;
