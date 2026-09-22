@@ -11,22 +11,28 @@ const FUEL_APP_URL_PREFIX = 'https://jonpederson.github.io/fuel/';
    *current value* fills. `sane` is an [min,max] plausibility range used to
    reject obviously-wrong scrapes before ever showing them to the user. */
 const FIELD_META = {
-  rbob:               { label: 'RBOB gasoline futures',      unit: 'usd_per_gal', appField: 'g_rbob_now',        sane: [0.5, 6] },
-  ulsd:               { label: 'ULSD diesel futures',        unit: 'usd_per_gal', appField: 'd_ulsd_now',        sane: [0.5, 6] },
-  brent:               { label: 'Brent crude',                unit: 'usd_per_bbl', appField: 'brent_now',         sane: [15, 200] },
-  wti:                 { label: 'WTI crude',                  unit: 'usd_per_bbl', appField: 'wti_now',           sane: [15, 200] },
-  new_auburn_gas:      { label: 'New Auburn regular',         unit: 'usd_per_gal', appField: 'g_price_newauburn', sane: [1, 8] },
-  new_auburn_diesel:   { label: 'New Auburn diesel',          unit: 'usd_per_gal', appField: 'd_price_newauburn', sane: [1, 8] },
-  chippewa_gas:        { label: 'Chippewa Falls regular',     unit: 'usd_per_gal', appField: 'g_price_chippewa',  sane: [1, 8] },
-  chippewa_diesel:     { label: 'Chippewa Falls diesel',      unit: 'usd_per_gal', appField: 'd_price_chippewa',  sane: [1, 8] },
-  eau_claire_gas:      { label: 'Eau Claire regular',         unit: 'usd_per_gal', appField: 'g_price_eauclaire', sane: [1, 8] },
-  eau_claire_diesel:   { label: 'Eau Claire diesel',          unit: 'usd_per_gal', appField: 'd_price_eauclaire', sane: [1, 8] },
-  wi_avg_gas:          { label: 'Wisconsin avg regular',      unit: 'usd_per_gal', appField: 'g_price_wiavg',     sane: [1, 8] },
-  wi_avg_diesel:       { label: 'Wisconsin avg diesel',       unit: 'usd_per_gal', appField: 'd_price_wiavg',     sane: [1, 8] },
-  twin_cities_gas:     { label: 'Twin Cities regular',        unit: 'usd_per_gal', appField: 'g_price_twincities', sane: [1, 8] },
-  twin_cities_diesel:  { label: 'Twin Cities diesel',         unit: 'usd_per_gal', appField: 'd_price_twincities', sane: [1, 8] },
-  padd2_gas_stock:     { label: 'PADD 2 gasoline stocks',     unit: 'kbbl',        appField: null,                sane: [50000, 400000] },
-  padd2_distillate_stock: { label: 'PADD 2 distillate stocks', unit: 'kbbl',       appField: null,                sane: [20000, 200000] }
+  rbob:               { label: 'RBOB gasoline futures',      unit: 'usd_per_gal', kind: 'level', appField: 'g_rbob_now',        sane: [0.5, 6] },
+  ulsd:               { label: 'ULSD diesel futures',        unit: 'usd_per_gal', kind: 'level', appField: 'd_ulsd_now',        sane: [0.5, 6] },
+  brent:               { label: 'Brent crude',                unit: 'usd_per_bbl', kind: 'level', appField: 'brent_now',         sane: [15, 200] },
+  wti:                 { label: 'WTI crude',                  unit: 'usd_per_bbl', kind: 'level', appField: 'wti_now',           sane: [15, 200] },
+  new_auburn_gas:      { label: 'New Auburn regular',         unit: 'usd_per_gal', kind: 'level', appField: 'g_price_newauburn', sane: [1, 8] },
+  new_auburn_diesel:   { label: 'New Auburn diesel',          unit: 'usd_per_gal', kind: 'level', appField: 'd_price_newauburn', sane: [1, 8] },
+  chippewa_gas:        { label: 'Chippewa Falls regular',     unit: 'usd_per_gal', kind: 'level', appField: 'g_price_chippewa',  sane: [1, 8] },
+  chippewa_diesel:     { label: 'Chippewa Falls diesel',      unit: 'usd_per_gal', kind: 'level', appField: 'd_price_chippewa',  sane: [1, 8] },
+  eau_claire_gas:      { label: 'Eau Claire regular',         unit: 'usd_per_gal', kind: 'level', appField: 'g_price_eauclaire', sane: [1, 8] },
+  eau_claire_diesel:   { label: 'Eau Claire diesel',          unit: 'usd_per_gal', kind: 'level', appField: 'd_price_eauclaire', sane: [1, 8] },
+  wi_avg_gas:          { label: 'Wisconsin avg regular',      unit: 'usd_per_gal', kind: 'level', appField: 'g_price_wiavg',     sane: [1, 8] },
+  wi_avg_diesel:       { label: 'Wisconsin avg diesel',       unit: 'usd_per_gal', kind: 'level', appField: 'd_price_wiavg',     sane: [1, 8] },
+  twin_cities_gas:     { label: 'Twin Cities regular',        unit: 'usd_per_gal', kind: 'level', appField: 'g_price_twincities', sane: [1, 8] },
+  twin_cities_diesel:  { label: 'Twin Cities diesel',         unit: 'usd_per_gal', kind: 'level', appField: 'd_price_twincities', sane: [1, 8] },
+  padd2_gas_stock:     { label: 'PADD 2 gasoline stocks',     unit: 'kbbl',        kind: 'level', appField: null,                sane: [50000, 400000] },
+  padd2_distillate_stock: { label: 'PADD 2 distillate stocks', unit: 'kbbl',       kind: 'level', appField: null,                sane: [20000, 200000] },
+  /* Direct pass-through: the source page already computes these as a change
+     (not a level), e.g. MarketWatch's own 24h price-change figure. No
+     history/delta math applies -- the captured value goes straight to its
+     report field once confirmed. */
+  rbob_chg24h:         { label: 'RBOB 24h change (quote page)', unit: 'cents', kind: 'change', appField: 'g_rbob_chg24h', sane: [-60, 60] },
+  ulsd_chg24h:         { label: 'ULSD 24h change (quote page)', unit: 'cents', kind: 'change', appField: 'd_ulsd_chg24h', sane: [-60, 60] }
 };
 
 const QUICK_LINKS = [

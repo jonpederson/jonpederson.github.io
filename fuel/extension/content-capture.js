@@ -4,15 +4,17 @@
    before it ever reaches the report form. Never trust a single scrape. */
 
 (function () {
-  const PRICE_RE = /-?\$?\s?(\d{1,4}\.\d{2,4})/g;
+  const PRICE_RE = /(-?)\$?\s?(\d{1,4}\.\d{2,4})/g;
 
   function numbersNear(text) {
     const out = [];
     let m;
     PRICE_RE.lastIndex = 0;
-    while ((m = PRICE_RE.exec(text)) !== null) out.push(parseFloat(m[1]));
+    while ((m = PRICE_RE.exec(text)) !== null) out.push(parseFloat(m[1] + m[2]));
     return out;
   }
+
+  function round2(x) { return Math.round(x * 100) / 100; }
 
   function median(nums) {
     if (!nums.length) return null;
@@ -37,7 +39,21 @@
     return null;
   }
 
-  /* ---------------- MarketWatch futures quote page ---------------- */
+  /* ---------------- MarketWatch futures quote page ----------------
+     Confirmed against the live RB.1/HO.1 templates: the head carries
+     server-rendered <meta name="price"|"priceChange"|"priceChangePercent">
+     tags that don't depend on the live-update websocket, so they're the
+     primary source. DOM fallback is h2.intraday__price .value for price
+     and .intraday__change .change--point--q for the change -- NOT a bare
+     bg-quote[field="Last"], which also matches unrelated ticker/sidebar
+     quotes elsewhere on the page. */
+  function metaNumber(name) {
+    const el = document.querySelector(`meta[name="${name}"]`);
+    if (!el) return null;
+    const n = parseFloat((el.content || '').replace(/[^0-9.\-]/g, ''));
+    return Number.isNaN(n) ? null : n;
+  }
+
   function captureMarketWatch() {
     if (!/\/investing\/future\//.test(location.pathname)) return [];
     const titleText = (document.querySelector('h1') || {}).textContent || document.title || '';
@@ -48,14 +64,31 @@
     else if (/WTI|Light Sweet|Crude Oil/i.test(titleText)) field = 'wti';
     if (!field) return [];
 
-    const found = firstNumberFrom([
-      'bg-quote.value',
-      '.intraday__price bg-quote',
-      '.intraday__price .value',
-      '[class*="intraday__price"]'
-    ]);
-    if (found) return [{ field, value: found.value, rawText: found.rawText }];
+    const out = [];
 
+    let price = metaNumber('price');
+    let priceRaw = price !== null ? 'meta[name=price]' : '';
+    if (price === null) {
+      const found = firstNumberFrom(['h2.intraday__price .value']);
+      if (found) { price = found.value; priceRaw = found.rawText; }
+    }
+    if (price !== null) out.push({ field, value: price, rawText: priceRaw });
+
+    // The quote page already computes the official 24h change -- use it
+    // directly for the fields the report form has a same-day change input
+    // for, instead of waiting on multi-day capture history to derive it.
+    const DIRECT_CHANGE_FIELD = { rbob: 'rbob_chg24h', ulsd: 'ulsd_chg24h' };
+    if (DIRECT_CHANGE_FIELD[field]) {
+      let change = metaNumber('priceChange');
+      let changeRaw = change !== null ? 'meta[name=priceChange]' : '';
+      if (change === null) {
+        const found = firstNumberFrom(['.intraday__change .change--point--q']);
+        if (found) { change = found.value; changeRaw = found.rawText; }
+      }
+      if (change !== null) out.push({ field: DIRECT_CHANGE_FIELD[field], value: round2(change * 100), rawText: changeRaw });
+    }
+
+    if (out.length) return out;
     // fallback: scan the top of the page's visible text
     const bodyText = document.body.innerText.slice(0, 1200);
     const nums = numbersNear(bodyText);

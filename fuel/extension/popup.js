@@ -72,6 +72,7 @@ function fmtVal(field, v) {
   const meta = FIELD_META[field];
   if (meta.unit === 'usd_per_gal') return '$' + v.toFixed(4);
   if (meta.unit === 'usd_per_bbl') return '$' + v.toFixed(2);
+  if (meta.unit === 'cents') return (v >= 0 ? '+' : '') + v.toFixed(2) + '¢';
   return v.toLocaleString();
 }
 function fmtDelta(d, field) {
@@ -95,12 +96,13 @@ function renderCaptured() {
     const s = currentSummary[f];
     const age = faFmtAge(s.latest.ts);
     const stale = (Date.now() - s.latest.ts) > 48 * 3600 * 1000;
+    const isChange = FIELD_META[f].kind === 'change';
     html += `<tr>
       <td>${FIELD_META[f].label}<br><span class="${stale ? 'age-stale' : ''}" style="color:var(--muted);font-size:0.58rem;">${age}</span></td>
       <td class="num">${fmtVal(f, s.latest.value)}</td>
-      <td class="num">${fmtDelta(s.chg1, f)}</td>
-      <td class="num">${fmtDelta(s.chg3, f)}</td>
-      <td class="num">${fmtDelta(s.chg5, f)}</td>
+      <td class="num">${isChange ? '<span style="color:var(--muted)">n/a</span>' : fmtDelta(s.chg1, f)}</td>
+      <td class="num">${isChange ? '<span style="color:var(--muted)">n/a</span>' : fmtDelta(s.chg3, f)}</td>
+      <td class="num">${isChange ? '<span style="color:var(--muted)">n/a</span>' : fmtDelta(s.chg5, f)}</td>
     </tr>`;
   });
   html += '</tbody></table>';
