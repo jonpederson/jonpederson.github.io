@@ -26,6 +26,7 @@
         "https://www.eia.gov/petroleum/gasdiesel/*",
         "https://gasprices.aaa.com/*",
         "https://www.gasbuddy.com/gasprices/*",
+        "https://www.gasbuddy.com/usa*",
         "https://oilprice.com/oil-price-charts*"
       ],
       "js": ["shared.js", "content-capture.js"],
