@@ -13,6 +13,8 @@ const FUEL_APP_URL_PREFIX = 'https://jonpederson.github.io/fuel/';
 const FIELD_META = {
   rbob:               { label: 'RBOB gasoline futures',      unit: 'usd_per_gal', kind: 'level', appField: 'g_rbob_now',        sane: [0.5, 6] },
   ulsd:               { label: 'ULSD diesel futures',        unit: 'usd_per_gal', kind: 'level', appField: 'd_ulsd_now',        sane: [0.5, 6] },
+  rbob_m2:            { label: 'RBOB 2nd-month contract',    unit: 'usd_per_gal', kind: 'level', appField: 'g_rbob_m2',         sane: [0.5, 6] },
+  ulsd_m2:            { label: 'ULSD 2nd-month contract',    unit: 'usd_per_gal', kind: 'level', appField: 'd_ulsd_m2',         sane: [0.5, 6] },
   brent:               { label: 'Brent crude',                unit: 'usd_per_bbl', kind: 'level', appField: 'brent_now',         sane: [15, 200] },
   wti:                 { label: 'WTI crude',                  unit: 'usd_per_bbl', kind: 'level', appField: 'wti_now',           sane: [15, 200] },
   new_auburn_gas:      { label: 'New Auburn regular',         unit: 'usd_per_gal', kind: 'level', appField: 'g_price_newauburn', sane: [1, 8] },
@@ -38,6 +40,8 @@ const FIELD_META = {
 const QUICK_LINKS = [
   { field: 'rbob', label: 'RBOB futures (MarketWatch)', url: 'https://www.marketwatch.com/investing/future/rb.1' },
   { field: 'ulsd', label: 'ULSD futures (MarketWatch)', url: 'https://www.marketwatch.com/investing/future/ho.1' },
+  { field: 'rbob_m2', label: 'RBOB 2nd-month contract (term structure)', url: 'https://www.marketwatch.com/investing/future/rb.2' },
+  { field: 'ulsd_m2', label: 'ULSD 2nd-month contract (term structure)', url: 'https://www.marketwatch.com/investing/future/ho.2' },
   { field: 'brent', label: 'Brent crude (MarketWatch)', url: 'https://www.marketwatch.com/investing/future/bz.1' },
   { field: 'wti', label: 'WTI crude (MarketWatch)', url: 'https://www.marketwatch.com/investing/future/cl.1' },
   { field: 'padd2_gas_stock', label: 'EIA PADD 2 gasoline stocks', url: 'https://www.eia.gov/dnav/pet/pet_stoc_wstk_dcu_r20_w.htm' },

@@ -201,6 +201,13 @@
           </div>
         </details>
 
+        <details>
+          <summary>11 &middot; RBOB Term Structure (new signal)</summary>
+          <div class="fields">
+            <div class="frow"><label>RBOB next-month contract price ($/gal) <span class="help">MarketWatch RB.2. Compared against RBOB current price above to gauge whether the market expects near-term tightness (backwardation) or looser supply (contango). Unvalidated signal &mdash; check the Historical Learning log before trusting it heavily.</span></label><input type="number" step="0.0001" id="g_rbob_m2"></div>
+          </div>
+        </details>
+
         <details open>
           <summary>Retail Prices (reference)</summary>
           <div class="fields">
@@ -311,6 +318,13 @@
               </select>
             </div>
             <div class="frow checkrow"><label><input type="checkbox" id="d_ulsd_accel"> That move is accelerating sharply (&plusmn;3 more)</label></div>
+          </div>
+        </details>
+
+        <details>
+          <summary>11 &middot; ULSD Term Structure (new signal)</summary>
+          <div class="fields">
+            <div class="frow"><label>ULSD next-month contract price ($/gal) <span class="help">MarketWatch HO.2. This is the most direct leading indicator available for off-road/bulk diesel &mdash; it's the wholesale forward curve your co-op's own contract desk prices off of, ahead of any retail or posted price. Unvalidated signal &mdash; check the Historical Learning log before trusting it heavily.</span></label><input type="number" step="0.0001" id="d_ulsd_m2"></div>
           </div>
         </details>
 
@@ -539,7 +553,7 @@ initHeader();
 /* ---------- form field registry & autosave ---------- */
 const FIELD_IDS = [
   'brent_now','brent_chg3s','wti_now','wti_chg3s',
-  'g_rbob_now','g_rbob_chg24h','g_rbob_chg3s','g_rbob_chg5s','g_rbob_momentum',
+  'g_rbob_now','g_rbob_chg24h','g_rbob_chg3s','g_rbob_chg5s','g_rbob_momentum','g_rbob_m2',
   'g_price_newauburn','g_price_chippewa','g_price_eauclaire','g_price_wiavg','g_price_twincities',
   'g_tc_restoration','g_tc_broad','g_tc_decline35',
   'g_ec_dir','g_ec_mag','g_ec_naub_caught_up',
@@ -547,7 +561,7 @@ const FIELD_IDS = [
   'g_padd2_wow','g_padd2_consec',
   'g_disruption','g_news_checked',
   'g_override_chase_local_jump','g_override_chase_tc_stopped',
-  'd_ulsd_now','d_ulsd_chg24h','d_ulsd_chg3s','d_ulsd_chg5s','d_ulsd_trend','d_ulsd_accel',
+  'd_ulsd_now','d_ulsd_chg24h','d_ulsd_chg3s','d_ulsd_chg5s','d_ulsd_trend','d_ulsd_accel','d_ulsd_m2',
   'd_price_newauburn','d_price_chippewa','d_price_eauclaire','d_price_wiavg','d_price_twincities',
   'd_catchup','d_ec_dir','d_ec_mag',
   'd_padd2_wow','d_padd2_consec',
@@ -694,6 +708,16 @@ function scoreGasoline(v){
     add('10. Brent 3-session ('+b.toFixed(2)+')', pts);
   } else add('10. Crude oil', 0, 'Unavailable');
 
+  // 11. Term structure (new, unvalidated signal — see Historical Learning log)
+  if(v.g_rbob_now!==null && v.g_rbob_m2!==null){
+    const spread = (v.g_rbob_now - v.g_rbob_m2) * 100; // cents; positive = backwardation
+    const a = Math.abs(spread);
+    let pts = 0;
+    if(a>=3) pts = spread>0 ? 10 : -10;
+    else if(a>=1) pts = spread>0 ? 5 : -5;
+    add('11. RBOB term structure ('+(spread>=0?'+':'')+spread.toFixed(2)+'¢ M1−M2, '+(spread>0?'backwardation':'contango')+')', pts, a<1?'within 1¢, treated as flat':undefined);
+  } else add('11. RBOB term structure', 0, 'Unavailable');
+
   // overrides
   const overrides = [];
   const immediateBuy = (v.g_rbob_chg24h!==null && v.g_rbob_chg24h>=5) &&
@@ -794,6 +818,19 @@ function scoreDiesel(v){
   // 10. seasonal
   if(v.d_seasonal==='elevated') add('10. Seasonal demand elevated + draws/rising ULSD', 4);
   else if(v.d_seasonal==='weak') add('10. Seasonal demand weak + inventory builds', -4);
+
+  // 11. Term structure (new, unvalidated signal — see Historical Learning log).
+  // This is the most direct leading indicator available for off-road/bulk
+  // diesel: it's the forward curve a co-op's contract desk prices off of,
+  // ahead of any retail or posted bulk price.
+  if(v.d_ulsd_now!==null && v.d_ulsd_m2!==null){
+    const spread = (v.d_ulsd_now - v.d_ulsd_m2) * 100; // cents; positive = backwardation
+    const a = Math.abs(spread);
+    let pts = 0;
+    if(a>=3) pts = spread>0 ? 10 : -10;
+    else if(a>=1) pts = spread>0 ? 5 : -5;
+    add('11. ULSD term structure ('+(spread>=0?'+':'')+spread.toFixed(2)+'¢ M1−M2, '+(spread>0?'backwardation':'contango')+')', pts, a<1?'within 1¢, treated as flat':undefined);
+  } else add('11. ULSD term structure', 0, 'Unavailable');
 
   // price jump warning (>=2 of 4)
   let warnCount = 0;
@@ -984,6 +1021,14 @@ function buildReport(){
   out += evidenceRow('Eau Claire diesel', v.d_price_eauclaire, '$'+fmt3(v.d_price_eauclaire), v.d_ec_mag, '¢ ('+v.d_ec_dir+')', undefined);
   out += evidenceRow('PADD 2 gasoline stocks WoW', v.g_padd2_wow, fmtPct(v.g_padd2_wow), null, '', v.g_padd2_wow!==null?(v.g_padd2_wow<0?1:-1):undefined);
   out += evidenceRow('PADD 2 distillate stocks WoW', v.d_padd2_wow, fmtPct(v.d_padd2_wow), null, '', v.d_padd2_wow!==null?(v.d_padd2_wow<0?1:-1):undefined);
+  if(v.g_rbob_now!==null && v.g_rbob_m2!==null){
+    const gSpread = (v.g_rbob_now - v.g_rbob_m2) * 100;
+    out += evidenceRow('RBOB term structure (M1−M2)', gSpread, (gSpread>=0?'+':'')+gSpread.toFixed(2)+'¢', null, '', gSpread>=1?1:(gSpread<=-1?-1:undefined));
+  }
+  if(v.d_ulsd_now!==null && v.d_ulsd_m2!==null){
+    const dSpread = (v.d_ulsd_now - v.d_ulsd_m2) * 100;
+    out += evidenceRow('ULSD term structure (M1−M2)', dSpread, (dSpread>=0?'+':'')+dSpread.toFixed(2)+'¢', null, '', dSpread>=1?1:(dSpread<=-1?-1:undefined));
+  }
   out += '\nSource: user-entered, per links in Sources & Methodology. Record source timestamps there.\n\n';
 
   out += '## Full Score Breakdown\n\n**Gasoline** — GAS_SCORE = '+gas.total+'\n';

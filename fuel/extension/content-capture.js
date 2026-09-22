@@ -61,12 +61,23 @@
   function captureMarketWatch() {
     if (!/\/investing\/future\//.test(location.pathname)) return [];
     const titleText = (document.querySelector('h1') || {}).textContent || document.title || '';
-    let field = null;
-    if (/RBOB/i.test(titleText)) field = 'rbob';
-    else if (/Heating Oil|ULSD|NY Harbor/i.test(titleText)) field = 'ulsd';
-    else if (/Brent/i.test(titleText)) field = 'brent';
-    else if (/WTI|Light Sweet|Crude Oil/i.test(titleText)) field = 'wti';
-    if (!field) return [];
+    let baseField = null;
+    if (/RBOB/i.test(titleText)) baseField = 'rbob';
+    else if (/Heating Oil|ULSD|NY Harbor/i.test(titleText)) baseField = 'ulsd';
+    else if (/Brent/i.test(titleText)) baseField = 'brent';
+    else if (/WTI|Light Sweet|Crude Oil/i.test(titleText)) baseField = 'wti';
+    if (!baseField) return [];
+
+    // Contract month comes from the URL (e.g. /investing/future/rb.2), not
+    // the DOM -- always available synchronously, unlike page text which may
+    // not distinguish month. Month 1 = front/current field name; month 2 =
+    // the term-structure comparison field (rbob_m2/ulsd_m2). Only handles
+    // 1 and 2 -- anything else (an unrecognized contract suffix) is treated
+    // as not-this-page rather than guessed at.
+    const monthMatch = location.pathname.match(/\/([a-z]{2})\.(\d+)/i);
+    const month = monthMatch ? parseInt(monthMatch[2], 10) : 1;
+    if (month !== 1 && month !== 2) return [];
+    const field = month === 2 ? baseField + '_m2' : baseField;
 
     const out = [];
 
@@ -81,15 +92,16 @@
     // The quote page already computes the official 24h change -- use it
     // directly for the fields the report form has a same-day change input
     // for, instead of waiting on multi-day capture history to derive it.
+    // Only the front-month contract has a same-day-change report field.
     const DIRECT_CHANGE_FIELD = { rbob: 'rbob_chg24h', ulsd: 'ulsd_chg24h' };
-    if (DIRECT_CHANGE_FIELD[field]) {
+    if (month === 1 && DIRECT_CHANGE_FIELD[baseField]) {
       let change = metaNumber('priceChange');
       let changeRaw = change !== null ? 'meta[name=priceChange]' : '';
       if (change === null) {
         const found = firstNumberFrom(['.intraday__change .change--point--q']);
         if (found) { change = found.value; changeRaw = found.rawText; }
       }
-      if (change !== null) out.push({ field: DIRECT_CHANGE_FIELD[field], value: round2(change * 100), rawText: changeRaw });
+      if (change !== null) out.push({ field: DIRECT_CHANGE_FIELD[baseField], value: round2(change * 100), rawText: changeRaw });
     }
 
     if (out.length) return out;

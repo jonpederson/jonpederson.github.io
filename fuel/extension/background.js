@@ -63,7 +63,7 @@ function buildAutofillPayload(state) {
     const meta = FIELD_META[field];
     if (meta.appField && s[field].latest) payload[meta.appField] = s[field].latest.value;
   };
-  ['rbob', 'ulsd', 'brent', 'wti', 'new_auburn_gas', 'new_auburn_diesel', 'chippewa_gas', 'chippewa_diesel',
+  ['rbob', 'ulsd', 'rbob_m2', 'ulsd_m2', 'brent', 'wti', 'new_auburn_gas', 'new_auburn_diesel', 'chippewa_gas', 'chippewa_diesel',
    'eau_claire_gas', 'eau_claire_diesel', 'wi_avg_gas', 'wi_avg_diesel', 'twin_cities_gas', 'twin_cities_diesel']
     .forEach(setCurrent);
 
