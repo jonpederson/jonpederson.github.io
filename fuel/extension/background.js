@@ -67,10 +67,21 @@ function buildAutofillPayload(state) {
    'eau_claire_gas', 'eau_claire_diesel', 'wi_avg_gas', 'wi_avg_diesel', 'twin_cities_gas', 'twin_cities_diesel']
     .forEach(setCurrent);
 
-  if (s.rbob.chg1) payload.g_rbob_chg24h = round2(s.rbob.chg1.diff * 100);
+  // Prefer the quote page's own official 24h change (captured today) over
+  // our day-over-day history delta -- it's exchange-computed and doesn't
+  // need two days of capture history to exist yet. Fall back to the delta
+  // otherwise (e.g. the source page's change figure wasn't found).
+  const today = faChicagoDateKey();
+  const setChg24h = (directField, appId, levelSummary) => {
+    const direct = s[directField].latest;
+    if (direct && direct.date === today) payload[appId] = round2(direct.value);
+    else if (levelSummary.chg1) payload[appId] = round2(levelSummary.chg1.diff * 100);
+  };
+  setChg24h('rbob_chg24h', 'g_rbob_chg24h', s.rbob);
+  setChg24h('ulsd_chg24h', 'd_ulsd_chg24h', s.ulsd);
+
   if (s.rbob.chg3) payload.g_rbob_chg3s = round2(s.rbob.chg3.diff * 100);
   if (s.rbob.chg5) payload.g_rbob_chg5s = round2(s.rbob.chg5.diff * 100);
-  if (s.ulsd.chg1) payload.d_ulsd_chg24h = round2(s.ulsd.chg1.diff * 100);
   if (s.ulsd.chg3) payload.d_ulsd_chg3s = round2(s.ulsd.chg3.diff * 100);
   if (s.ulsd.chg5) payload.d_ulsd_chg5s = round2(s.ulsd.chg5.diff * 100);
   if (s.brent.chg3) payload.brent_chg3s = round2(s.brent.chg3.diff);
