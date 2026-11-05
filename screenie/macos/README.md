@@ -4,7 +4,13 @@ A native Swift version of Screenie for Apple Silicon Macs on macOS 14 Sonoma or 
 
 This is **phase 1** of the port described in [../MAC_PORT.md](../MAC_PORT.md): the menu bar app, idle watcher, global shortcut, settings, one window per display, and the Aurora, Starfield and Black styles. Farm, HUD and Agents come later.
 
-## Install
+## Download
+
+**[Screenie.dmg](https://github.com/jonpederson/jonpederson.github.io/releases/download/screenie-macos-latest/Screenie.dmg)** (Apple Silicon, macOS 14+), always the newest build.
+
+Open the disk image and drag Screenie into Applications (or just open it, and it offers to move itself there). The first time, macOS blocks it because it isn't notarized; see below.
+
+## Build from source
 
 Needs Xcode or the Command Line Tools (`xcode-select --install`).
 
@@ -14,7 +20,7 @@ Needs Xcode or the Command Line Tools (`xcode-select --install`).
 
 This builds `build/Screenie.app`, copies it to `/Applications` (or `~/Applications`), and opens it. On first launch Screenie adds itself to Login Items and opens its settings. A ✨ icon in the menu bar shows it's running.
 
-To build without installing, run `./build.sh`. CI (`.github/workflows/screenie-macos.yml`) also builds it on every push that touches this folder and attaches a zipped app to the run.
+To build without installing, run `./build.sh`. CI (`.github/workflows/screenie-macos.yml`) also builds it on every push that touches this folder and publishes the disk image to the download link above.
 
 ## Use
 

@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write  # to publish the download release
 
 jobs:
   build:
@@ -34,3 +34,16 @@ jobs:
         with:
           name: Screenie-macOS-arm64
           path: screenie/macos/build/Screenie.dmg
+      # A fixed download link that always has the newest build:
+      # https://github.com/<owner>/<repo>/releases/download/screenie-macos-latest/Screenie.dmg
+      - name: Publish download release
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: screenie-macos-latest
+        run: |
+          gh release delete "$TAG" --cleanup-tag --yes --repo "$GITHUB_REPOSITORY" || true
+          gh release create "$TAG" screenie/macos/build/Screenie.dmg \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
+            --title "Screenie for macOS (latest build)" \
+            --notes "Apple Silicon, macOS 14 or newer. Built from ${GITHUB_REF_NAME} at ${GITHUB_SHA::7}. Open the disk image and drag Screenie to Applications. It isn't notarized, so the first time macOS says it can't be opened: click Done, then open System Settings > Privacy & Security and click Open Anyway."
