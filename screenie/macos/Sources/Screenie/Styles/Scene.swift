@@ -22,7 +22,8 @@ enum Styles {
         case .starfield: return StarfieldStyle()
         case .farm: return FarmStyle(showClock: config.showClock)
         case .black: return BlackStyle()
-        case .hud, .agents: return AuroraStyle()  // not built yet (later phases)
+        case .hud: return HudStyle(config: config)
+        case .agents: return AuroraStyle()  // not built yet (a later phase)
         }
     }
 }
@@ -67,9 +68,14 @@ struct SceneView: View {
     @Environment(\.displayScale) private var displayScale
 
     var body: some View {
-        TimelineView(.animation) { timeline in
-            Canvas { ctx, size in
-                model.render(&ctx, size: size, now: timeline.date, scale: displayScale)
+        ZStack(alignment: .topLeading) {
+            TimelineView(.animation) { timeline in
+                Canvas { ctx, size in
+                    model.render(&ctx, size: size, now: timeline.date, scale: displayScale)
+                }
+            }
+            if let hud = model.style as? HudStyle {
+                HudOverlayView(model: hud.overlay)  // NASA's live ISS stream
             }
         }
         .background(Color.black)

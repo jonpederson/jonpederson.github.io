@@ -38,6 +38,9 @@ jobs:
           for style in aurora starfield farm black; do
             Screenie.app/Contents/MacOS/Screenie --snapshot "$style" 40 "snapshots/$style.png"
           done
+          # The HUD waits 30 s for its live data first. Ultrawide, like the Linux layout target.
+          Screenie.app/Contents/MacOS/Screenie --snapshot hud 3 snapshots/hud.png 3440 1440
+          Screenie.app/Contents/MacOS/Screenie --snapshot hud 3 snapshots/hud-laptop.png 1728 1117
       - uses: actions/upload-artifact@v4
         with:
           name: Screenie-snapshots

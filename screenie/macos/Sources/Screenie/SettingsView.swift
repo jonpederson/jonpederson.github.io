@@ -9,6 +9,8 @@ struct SettingsView: View {
 
     @State private var loginEnabled = LoginItem.isEnabled
     @State private var loginNeedsApproval = LoginItem.status == .requiresApproval
+    @State private var locationText = ConfigStore.shared.config.hudLocation
+    @State private var locationError: String?
 
     var body: some View {
         Form {
@@ -47,7 +49,31 @@ struct SettingsView: View {
             } header: {
                 Text("Appearance")
             } footer: {
-                Text("HUD and Agents are coming in a later version. Farm shows the time in its camera overlay.")
+                Text("Agents is coming in a later version. Farm and HUD show the time themselves.")
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                LabeledContent("Exact location") {
+                    HStack {
+                        TextField("", text: $locationText, prompt: Text("latitude, longitude"))
+                            .frame(width: 190)
+                            .onSubmit(applyLocation)
+                        Button("Apply", action: applyLocation)
+                    }
+                }
+                if let locationError {
+                    Text(locationError).font(.callout).foregroundStyle(.orange)
+                }
+                Picker("Units", selection: $store.config.hudUnits) {
+                    Text("Automatic").tag("auto")
+                    Text("US (°F, mph, miles)").tag("imperial")
+                    Text("Metric").tag("metric")
+                }
+            } header: {
+                Text("HUD Style")
+            } footer: {
+                Text("Live data from Open-Meteo, USGS, NASA/JPL, NOAA, ORNL, WisDOT and wheretheiss.at. Your location is estimated from your IP address unless you enter it here.")
                     .foregroundStyle(.secondary)
             }
 
@@ -86,6 +112,16 @@ struct SettingsView: View {
     private var styleBinding: Binding<StyleID> {
         Binding(get: { store.config.renderStyle },
                 set: { store.config.style = $0.rawValue })
+    }
+
+    private func applyLocation() {
+        let text = locationText.trimmingCharacters(in: .whitespaces)
+        if !text.isEmpty && parseCoords(text) == nil {
+            locationError = "Enter coordinates like 45.2041, -91.5582"
+            return
+        }
+        locationError = nil
+        store.config.hudLocation = text
     }
 
     private func refreshLoginState() {

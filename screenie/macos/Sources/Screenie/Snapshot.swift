@@ -18,6 +18,11 @@ enum Snapshot {
         let height = args.count >= 5 ? Double(args[4]) ?? 1117 : 1117
         let scale: CGFloat = 2
         let model = SceneModel(config: config)
+        if config.style == StyleID.hud.rawValue {
+            // Give the live data sources time to arrive before taking the picture.
+            let warmup = Double(ProcessInfo.processInfo.environment["SCREENIE_SNAPSHOT_WARMUP"] ?? "") ?? 30
+            RunLoop.main.run(until: Date().addingTimeInterval(warmup))
+        }
         let start = Date()
         let steps = max(1, Int(seconds / 0.1))
 
