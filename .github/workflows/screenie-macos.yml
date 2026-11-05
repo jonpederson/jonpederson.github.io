@@ -54,8 +54,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: screenie-macos-latest
         run: |
+          shopt -s nullglob  # screenshots are optional
+          files=(screenie/macos/build/Screenie.dmg screenie/macos/build/snapshots/*.png)
           gh release delete "$TAG" --cleanup-tag --yes --repo "$GITHUB_REPOSITORY" || true
-          gh release create "$TAG" screenie/macos/build/Screenie.dmg \
+          gh release create "$TAG" "${files[@]}" \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
             --title "Screenie for macOS (latest build)" \
             --notes "Apple Silicon, macOS 14 or newer. Built from ${GITHUB_REF_NAME} at ${GITHUB_SHA::7}. Open the disk image and drag Screenie to Applications. It isn't notarized, so the first time macOS says it can't be opened: click Done, then open System Settings > Privacy & Security and click Open Anyway."
