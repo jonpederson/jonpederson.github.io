@@ -2,7 +2,7 @@
 
 A screensaver for GNOME (Wayland or X11) that comes on even while apps like Claude keep the computer awake.
 
-This is the Linux version. A native macOS version is planned; see [MAC_PORT.md](MAC_PORT.md).
+This is the Linux version. A native macOS version is in progress in [macos/](macos/README.md); see [MAC_PORT.md](MAC_PORT.md) for the plan.
 
 GNOME's own blanking stops working when an app holds an idle inhibitor. Screenie asks Mutter how long it has been since your last real keyboard or mouse input, and inhibitors don't affect that number. Your apps keep running underneath; Screenie only covers the screen.
 

@@ -1,0 +1,27 @@
+name: Screenie macOS build
+
+on:
+  push:
+    paths:
+      - "screenie/macos/**"
+      - ".github/workflows/screenie-macos.yml"
+  pull_request:
+    paths:
+      - "screenie/macos/**"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Screenie.app
+        working-directory: screenie/macos
+        run: ./build.sh
+      - name: Zip
+        working-directory: screenie/macos/build
+        run: ditto -c -k --keepParent Screenie.app Screenie.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Screenie-macOS-arm64
+          path: screenie/macos/build/Screenie.zip

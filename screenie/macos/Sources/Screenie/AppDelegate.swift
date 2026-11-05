@@ -1,0 +1,170 @@
+import AppKit
+import SwiftUI
+
+@main
+enum ScreenieMain {
+    @MainActor
+    static func main() {
+        let args = CommandLine.arguments
+        if args.contains("--unregister-login-item") {  // used by uninstall.sh
+            LoginItem.set(false)
+            return
+        }
+        let app = NSApplication.shared
+        let delegate = AppDelegate()
+        app.delegate = delegate
+        app.setActivationPolicy(.accessory)  // menu bar only (LSUIElement)
+        app.run()
+    }
+}
+
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+    private let store = ConfigStore.shared
+    private let saver = SaverController()
+    private var watcher: IdleWatcher?
+    private var statusItem: NSStatusItem?
+    private var settingsWindow: NSWindow?
+    private let startItem = NSMenuItem(title: "Start Screensaver Now", action: #selector(startNow), keyEquivalent: "")
+    private let idleItem = NSMenuItem(title: "Start When Idle", action: #selector(toggleIdle), keyEquivalent: "")
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        buildMainMenu()
+        buildStatusItem()
+
+        HotKey.shared.onPress = { [weak self] in self?.startSaver() }
+        store.applyHotKey()
+
+        saver.onDismissed = { [weak self] in self?.saverDismissed() }
+
+        let watcher = IdleWatcher(store: store,
+                                  isShowing: { [weak self] in self?.saver.isShowing ?? false },
+                                  fire: { [weak self] in self?.startSaver() })
+        watcher.start()
+        self.watcher = watcher
+
+        // First run: start at every login (as the Linux installer's autostart entry does)
+        // and show the settings so it's clear the app is running.
+        let defaults = UserDefaults.standard
+        if !defaults.bool(forKey: "didFirstLaunch") {
+            defaults.set(true, forKey: "didFirstLaunch")
+            LoginItem.set(true)
+            openSettings()
+        }
+    }
+
+    /// Opening the app again (Finder, Spotlight, `open -a Screenie`) shows the settings.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        openSettings()
+        return false
+    }
+
+    /// `open screenie://show` starts the screensaver; `screenie://settings` opens settings.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls where url.scheme == "screenie" {
+            switch url.host ?? url.path {
+            case "show", "start": startSaver()
+            case "settings": openSettings()
+            default: break
+            }
+        }
+    }
+
+    // MARK: Screensaver
+
+    func startSaver() {
+        store.reloadIfChanged()
+        saver.show(config: store.config)
+    }
+
+    private func saverDismissed() {
+        // Hand focus back to whatever was in front, unless the settings window is open.
+        if settingsWindow?.isVisible != true {
+            NSApp.hide(nil)
+        }
+    }
+
+    // MARK: Menus
+
+    private func buildStatusItem() {
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        if let button = item.button {
+            let image = NSImage(systemSymbolName: "sparkles", accessibilityDescription: "Screenie")
+            image?.isTemplate = true
+            button.image = image
+            button.toolTip = "Screenie"
+        }
+        let menu = NSMenu()
+        menu.delegate = self
+        startItem.target = self
+        idleItem.target = self
+        menu.addItem(startItem)
+        menu.addItem(idleItem)
+        menu.addItem(.separator())
+        let settings = NSMenuItem(title: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
+        settings.target = self
+        menu.addItem(settings)
+        menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: "Quit Screenie", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        item.menu = menu
+        statusItem = item
+    }
+
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        idleItem.state = store.config.enabled ? .on : .off
+        let minutes = store.config.idleMinutes
+        idleItem.title = "Start When Idle (\(minutes) min)"
+        if let s = Shortcut(string: store.config.shortcut), let ch = s.key?.character {
+            startItem.keyEquivalent = ch
+            startItem.keyEquivalentModifierMask = s.modifiers
+        } else {
+            startItem.keyEquivalent = ""
+        }
+    }
+
+    /// Accessory apps have no visible menu bar, but this makes ⌘W and ⌘Q work in settings.
+    private func buildMainMenu() {
+        let main = NSMenu()
+        let appItem = NSMenuItem()
+        let appMenu = NSMenu()
+        appMenu.addItem(NSMenuItem(title: "Quit Screenie", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        appItem.submenu = appMenu
+        main.addItem(appItem)
+        let fileItem = NSMenuItem()
+        let fileMenu = NSMenu(title: "File")
+        fileMenu.addItem(NSMenuItem(title: "Close", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w"))
+        fileItem.submenu = fileMenu
+        main.addItem(fileItem)
+        NSApp.mainMenu = main
+    }
+
+    @objc private func startNow() {
+        startSaver()
+    }
+
+    @objc private func toggleIdle() {
+        store.config.enabled.toggle()
+    }
+
+    @objc private func showSettings() {
+        openSettings()
+    }
+
+    // MARK: Settings
+
+    func openSettings() {
+        if settingsWindow == nil {
+            let view = SettingsView(store: store, preview: { [weak self] in self?.startSaver() })
+            let controller = NSHostingController(rootView: view)
+            let window = NSWindow(contentViewController: controller)
+            window.title = "Screenie"
+            window.styleMask = [.titled, .closable, .miniaturizable]
+            window.isReleasedWhenClosed = false
+            window.center()
+            window.setFrameAutosaveName("ScreenieSettings")
+            settingsWindow = window
+        }
+        NSApp.activate(ignoringOtherApps: true)
+        settingsWindow?.makeKeyAndOrderFront(nil)
+    }
+}
