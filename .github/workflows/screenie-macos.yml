@@ -13,6 +13,9 @@ on:
 permissions:
   contents: write  # to publish the download release
 
+concurrency:  # one build at a time per branch, so releases don't race
+  group: screenie-macos-${{ github.ref }}
+
 jobs:
   build:
     runs-on: macos-latest
@@ -66,8 +69,12 @@ jobs:
         run: |
           shopt -s nullglob  # screenshots are optional
           files=(screenie/macos/build/Screenie.dmg screenie/macos/build/snapshots/*.png)
-          gh release delete "$TAG" --cleanup-tag --yes --repo "$GITHUB_REPOSITORY" || true
-          gh release create "$TAG" "${files[@]}" \
-            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-            --title "Screenie for macOS (latest build)" \
-            --notes "Apple Silicon, macOS 14 or newer. Built from ${GITHUB_REF_NAME} at ${GITHUB_SHA::7}. Open the disk image and drag Screenie to Applications. It isn't notarized, so the first time macOS says it can't be opened: click Done, then open System Settings > Privacy & Security and click Open Anyway."
+          notes="Apple Silicon, macOS 14 or newer. Built from ${GITHUB_REF_NAME} at ${GITHUB_SHA::7}. Open the disk image and drag Screenie to Applications. It isn't notarized, so the first time macOS says it can't be opened: click Done, then open System Settings > Privacy & Security and click Open Anyway."
+          # Update the release in place, so the download link never goes missing mid-update.
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${files[@]}" --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit "$TAG" --notes "$notes" --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" "${files[@]}" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --prerelease --title "Screenie for macOS (latest build)" --notes "$notes"
+          fi
