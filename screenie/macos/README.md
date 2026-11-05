@@ -2,7 +2,7 @@
 
 A native Swift version of Screenie for Apple Silicon Macs on macOS 14 Sonoma or newer. Like the Linux version, it starts after a set time with no keyboard or mouse input, even while apps like Claude keep the Mac awake. Your apps keep running underneath; Screenie only covers the screen.
 
-This covers **phases 1 and 2** of the port described in [../MAC_PORT.md](../MAC_PORT.md): the menu bar app, idle watcher, global shortcut, settings, one window per display, and the Aurora, Starfield, Farm and Black styles. HUD and Agents come later.
+This covers **phases 1 to 3** of the port described in [../MAC_PORT.md](../MAC_PORT.md): the menu bar app, idle watcher, global shortcut, settings, one window per display, and the Aurora, Starfield, Farm, HUD and Black styles. Agents comes later.
 
 ## Download
 
@@ -29,8 +29,9 @@ To build without installing, run `./build.sh`. CI (`.github/workflows/screenie-m
 - **Settings:** choose **Settings…** from the menu bar icon, or open Screenie again from Finder or Spotlight
   - start when idle (on/off) and the idle time in minutes
   - the keyboard shortcut (click **Change**, press the new keys; Esc cancels, Delete turns it off)
-  - style: Aurora, Starfield, Farm (an endless ASCII farm seen from a drone flying over it) or Black
-  - a clock that drifts so it won't burn in (Farm shows the time in its camera overlay instead)
+  - style: Aurora, Starfield, Farm (an endless ASCII farm seen from a drone flying over it), HUD (a dashboard of live data; see the [Linux README](../README.md#hud-style) for every panel and source) or Black
+  - a clock that drifts so it won't burn in (Farm and HUD show the time themselves)
+  - HUD: your exact location (otherwise estimated from your IP address) and units
   - require password to dismiss: shows the login window when you come back
   - open at login
 - **From scripts:** `open screenie://show` starts it; `open screenie://settings` opens settings
@@ -65,6 +66,8 @@ Add `--purge` to also delete your settings.
 | Shortcut | Carbon `RegisterEventHotKey` (no Accessibility permission). Warns if another app holds the combination or macOS uses it (`Shortcut.swift`) |
 | Require password | `SACLockScreenImmediate` from the login framework (what ⌃⌘Q uses), falling back to `pmset displaysleepnow` |
 | Rendering | SwiftUI `Canvas` in a `TimelineView(.animation)`; Aurora's glows are pre-rendered once and scaled each frame. Farm rasterizes each 48-column chunk of ground once with Core Text on a whole-pixel grid and scrolls the bitmaps (`Styles/`) |
+| HUD data | Each source is polled on its own interval in the background while a HUD is on screen (`Styles/HUD/HudData.swift`); slow-changing data is cached in `~/Library/Caches/Screenie/hud.json`. Panels, the radar scope base, the verse and the seismograph trace are cached as bitmaps and refreshed one per frame |
+| HUD video | Traffic cameras play through `AVPlayer` (HLS in MPEG-TS) and are drawn frame by frame; NASA's live ISS stream is YouTube's embedded player in a `WKWebView` that ignores input |
 | Screenshots | `Screenie --snapshot <style> <seconds> <out.png>` renders a frame offscreen; CI uploads one per style |
 
 ## Testing checklist
@@ -75,3 +78,4 @@ Add `--purge` to also delete your settings.
 - [ ] Key, click, scroll or mouse movement dismisses it; with "require password" on, the login window appears
 - [ ] Launch at login works after a reboot
 - [ ] Each style renders smoothly on a Retina display
+- [ ] HUD: cameras play live, the ISS stream plays and doesn't swallow input, and every panel fills in
