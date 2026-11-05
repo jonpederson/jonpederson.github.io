@@ -35,6 +35,32 @@ final class Painter {
         NSFont.monospacedSystemFont(ofSize: max(size, 1), weight: weight) as CTFont
     }
 
+    static func sans(_ size: CGFloat, weight: NSFont.Weight = .regular) -> CTFont {
+        NSFont.systemFont(ofSize: max(size, 1), weight: weight) as CTFont
+    }
+
+    private static var glows: [String: CGImage] = [:]
+
+    /// A soft radial glow in `hex` (the Aurora orb), rendered once per colour.
+    static func glow(_ hex: String) -> CGImage? {
+        if let g = glows[hex] { return g }
+        let c = color(hex)
+        let comps = c.converted(to: CGColorSpace(name: CGColorSpace.sRGB)!, intent: .defaultIntent, options: nil)?.components ?? [1, 1, 1, 1]
+        let size = 128
+        let space = CGColorSpace(name: CGColorSpace.sRGB)!
+        guard comps.count >= 3,
+              let cg = CGContext(data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: 0, space: space,
+                                 bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        let colors = [0.38, 0.14, 0.0].map { CGColor(colorSpace: space, components: [comps[0], comps[1], comps[2], $0])! } as CFArray
+        let gradient = CGGradient(colorsSpace: space, colors: colors, locations: [0, 0.4, 1])!
+        let center = CGPoint(x: Double(size) / 2, y: Double(size) / 2)
+        cg.drawRadialGradient(gradient, startCenter: center, startRadius: 0, endCenter: center,
+                              endRadius: Double(size) / 2, options: [])
+        let img = cg.makeImage()
+        glows[hex] = img
+        return img
+    }
+
     static func serif(_ size: CGFloat, italic: Bool = false) -> CTFont {
         var desc = NSFont.systemFont(ofSize: max(size, 1)).fontDescriptor.withDesign(.serif)
             ?? NSFont.systemFont(ofSize: max(size, 1)).fontDescriptor
@@ -150,13 +176,13 @@ final class Painter {
         cg.fillPath()
     }
 
-    func stroke(_ path: CGPath, _ width: CGFloat, _ color: CGColor, dash: [CGFloat]? = nil) {
+    func stroke(_ path: CGPath, _ width: CGFloat, _ color: CGColor, dash: [CGFloat]? = nil, phase: CGFloat = 0) {
         cg.saveGState()
         cg.addPath(path)
         cg.setStrokeColor(color)
         cg.setLineWidth(width)
         cg.setLineJoin(.round)
-        if let dash { cg.setLineDash(phase: 0, lengths: dash) }
+        if let dash { cg.setLineDash(phase: phase, lengths: dash) }
         cg.strokePath()
         cg.restoreGState()
     }
@@ -168,8 +194,11 @@ final class Painter {
         stroke(p, width, color)
     }
 
-    func strokeCircle(_ cx: CGFloat, _ cy: CGFloat, _ r: CGFloat, _ width: CGFloat, _ color: CGColor) {
-        stroke(CGPath(ellipseIn: CGRect(x: cx - r, y: cy - r, width: 2 * r, height: 2 * r), transform: nil), width, color)
+    func strokeCircle(_ cx: CGFloat, _ cy: CGFloat, _ r: CGFloat, _ width: CGFloat, _ color: CGColor,
+                      dash: [CGFloat]? = nil, phase: CGFloat = 0) {
+        let r = max(r, 0.5)
+        stroke(CGPath(ellipseIn: CGRect(x: cx - r, y: cy - r, width: 2 * r, height: 2 * r), transform: nil), width, color,
+               dash: dash, phase: phase)
     }
 
     // MARK: Images and state

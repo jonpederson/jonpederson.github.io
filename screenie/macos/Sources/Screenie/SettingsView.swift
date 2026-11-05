@@ -49,7 +49,19 @@ struct SettingsView: View {
             } header: {
                 Text("Appearance")
             } footer: {
-                Text("Agents is coming in a later version. Farm and HUD show the time themselves.")
+                Text("Farm, HUD and Agents show the time themselves.")
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                Toggle(isOn: $store.config.agentsDetails) {
+                    Text("Show task titles and file names")
+                    Text("Off shows only anonymous stats. Prompts, code and commands are never shown.")
+                }
+            } header: {
+                Text("Agents Style")
+            } footer: {
+                Text("Mission control for the Claude Code agents running on this Mac.")
                     .foregroundStyle(.secondary)
             }
 

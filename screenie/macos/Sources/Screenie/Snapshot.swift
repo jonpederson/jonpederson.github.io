@@ -23,6 +23,9 @@ enum Snapshot {
             let warmup = Double(ProcessInfo.processInfo.environment["SCREENIE_SNAPSHOT_WARMUP"] ?? "") ?? 30
             RunLoop.main.run(until: Date().addingTimeInterval(warmup))
         }
+        if config.style == StyleID.agents.rawValue {
+            RunLoop.main.run(until: Date().addingTimeInterval(4))  // first scan of the session files
+        }
         let start = Date()
         let steps = max(1, Int(seconds / 0.1))
 

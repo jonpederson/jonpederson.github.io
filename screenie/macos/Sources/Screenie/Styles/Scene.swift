@@ -23,7 +23,7 @@ enum Styles {
         case .farm: return FarmStyle(showClock: config.showClock)
         case .black: return BlackStyle()
         case .hud: return HudStyle(config: config)
-        case .agents: return AuroraStyle()  // not built yet (a later phase)
+        case .agents: return AgentsStyle(config: config)
         }
     }
 }
