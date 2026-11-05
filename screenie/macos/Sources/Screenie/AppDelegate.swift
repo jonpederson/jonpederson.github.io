@@ -10,6 +10,9 @@ enum ScreenieMain {
             LoginItem.set(false)
             return
         }
+        if let i = args.firstIndex(of: "--snapshot") {  // offscreen screenshot, used by CI
+            exit(Snapshot.run(Array(args[(i + 1)...])))
+        }
         let app = NSApplication.shared
         let delegate = AppDelegate()
         app.delegate = delegate

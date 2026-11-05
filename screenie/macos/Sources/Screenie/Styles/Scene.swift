@@ -6,7 +6,8 @@ protocol SaverStyle: AnyObject {
     /// Farm, HUD and Agents show the time themselves, so they skip the drifting clock.
     var drawsOwnClock: Bool { get }
     func advance(dt: Double, size: CGSize)
-    func draw(_ ctx: inout GraphicsContext, size: CGSize, t: Double)
+    /// `scale` is the display's backing scale (2 on Retina), for styles that rasterize.
+    func draw(_ ctx: inout GraphicsContext, size: CGSize, t: Double, scale: CGFloat)
 }
 
 extension SaverStyle {
@@ -15,12 +16,13 @@ extension SaverStyle {
 }
 
 enum Styles {
-    static func make(_ id: StyleID) -> SaverStyle {
-        switch id {
+    static func make(_ config: Config) -> SaverStyle {
+        switch config.renderStyle {
         case .aurora: return AuroraStyle()
         case .starfield: return StarfieldStyle()
+        case .farm: return FarmStyle(showClock: config.showClock)
         case .black: return BlackStyle()
-        case .farm, .hud, .agents: return AuroraStyle()  // not built yet (later phases)
+        case .hud, .agents: return AuroraStyle()  // not built yet (later phases)
         }
     }
 }
@@ -35,11 +37,11 @@ final class SceneModel {
     private var last: TimeInterval = 0
 
     init(config: Config) {
-        style = Styles.make(config.renderStyle)
+        style = Styles.make(config)
         clock = config.showClock && !style.drawsOwnClock ? DriftingClock() : nil
     }
 
-    func render(_ ctx: inout GraphicsContext, size: CGSize, now: Date) {
+    func render(_ ctx: inout GraphicsContext, size: CGSize, now: Date, scale: CGFloat) {
         guard size.width > 0, size.height > 0 else { return }
         let time = now.timeIntervalSinceReferenceDate
         if start == nil {
@@ -55,18 +57,19 @@ final class SceneModel {
 
         ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.black))
         ctx.opacity = min(1, t / Self.fadeSeconds)
-        style.draw(&ctx, size: size, t: t)
+        style.draw(&ctx, size: size, t: t, scale: scale)
         clock?.draw(&ctx, size: size)
     }
 }
 
 struct SceneView: View {
     let model: SceneModel
+    @Environment(\.displayScale) private var displayScale
 
     var body: some View {
         TimelineView(.animation) { timeline in
             Canvas { ctx, size in
-                model.render(&ctx, size: size, now: timeline.date)
+                model.render(&ctx, size: size, now: timeline.date, scale: displayScale)
             }
         }
         .background(Color.black)
@@ -75,5 +78,5 @@ struct SceneView: View {
 }
 
 final class BlackStyle: SaverStyle {
-    func draw(_ ctx: inout GraphicsContext, size: CGSize, t: Double) {}
+    func draw(_ ctx: inout GraphicsContext, size: CGSize, t: Double, scale: CGFloat) {}
 }

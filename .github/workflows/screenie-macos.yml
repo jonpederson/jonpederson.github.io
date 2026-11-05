@@ -30,6 +30,18 @@ jobs:
           cp -R Screenie.app dmg/
           ln -s /Applications dmg/Applications
           hdiutil create -volname Screenie -srcfolder dmg -ov -format UDZO Screenie.dmg
+      - name: Screenshots of each style
+        continue-on-error: true  # a rendering hiccup on the runner shouldn't block the download
+        working-directory: screenie/macos/build
+        run: |
+          mkdir -p snapshots
+          for style in aurora starfield farm black; do
+            Screenie.app/Contents/MacOS/Screenie --snapshot "$style" 40 "snapshots/$style.png"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Screenie-snapshots
+          path: screenie/macos/build/snapshots
       - uses: actions/upload-artifact@v4
         with:
           name: Screenie-macOS-arm64

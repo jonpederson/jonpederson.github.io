@@ -47,7 +47,7 @@ struct SettingsView: View {
             } header: {
                 Text("Appearance")
             } footer: {
-                Text("Farm, HUD and Agents are coming in a later version.")
+                Text("HUD and Agents are coming in a later version. Farm shows the time in its camera overlay.")
                     .foregroundStyle(.secondary)
             }
 

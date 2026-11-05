@@ -23,7 +23,7 @@ final class StarfieldStyle: SaverStyle {
         }
     }
 
-    func draw(_ ctx: inout GraphicsContext, size: CGSize, t: Double) {
+    func draw(_ ctx: inout GraphicsContext, size: CGSize, t: Double, scale: CGFloat) {
         let w = size.width, h = size.height
         let cx = w / 2, cy = h / 2
         let f = max(w, h) * 0.5

@@ -2,7 +2,7 @@
 
 A native Swift version of Screenie for Apple Silicon Macs on macOS 14 Sonoma or newer. Like the Linux version, it starts after a set time with no keyboard or mouse input, even while apps like Claude keep the Mac awake. Your apps keep running underneath; Screenie only covers the screen.
 
-This is **phase 1** of the port described in [../MAC_PORT.md](../MAC_PORT.md): the menu bar app, idle watcher, global shortcut, settings, one window per display, and the Aurora, Starfield and Black styles. Farm, HUD and Agents come later.
+This covers **phases 1 and 2** of the port described in [../MAC_PORT.md](../MAC_PORT.md): the menu bar app, idle watcher, global shortcut, settings, one window per display, and the Aurora, Starfield, Farm and Black styles. HUD and Agents come later.
 
 ## Download
 
@@ -29,8 +29,8 @@ To build without installing, run `./build.sh`. CI (`.github/workflows/screenie-m
 - **Settings:** choose **Settings…** from the menu bar icon, or open Screenie again from Finder or Spotlight
   - start when idle (on/off) and the idle time in minutes
   - the keyboard shortcut (click **Change**, press the new keys; Esc cancels, Delete turns it off)
-  - style: Aurora, Starfield or Black
-  - a clock that drifts so it won't burn in
+  - style: Aurora, Starfield, Farm (an endless ASCII farm seen from a drone flying over it) or Black
+  - a clock that drifts so it won't burn in (Farm shows the time in its camera overlay instead)
   - require password to dismiss: shows the login window when you come back
   - open at login
 - **From scripts:** `open screenie://show` starts it; `open screenie://settings` opens settings
@@ -64,7 +64,8 @@ Add `--purge` to also delete your settings.
 | Dismiss | Local and global `NSEvent` monitors: key, modifier press, click, scroll, or more than 12 pt of mouse movement, after a 1 s grace period. Also dismisses if another app takes focus |
 | Shortcut | Carbon `RegisterEventHotKey` (no Accessibility permission). Warns if another app holds the combination or macOS uses it (`Shortcut.swift`) |
 | Require password | `SACLockScreenImmediate` from the login framework (what ⌃⌘Q uses), falling back to `pmset displaysleepnow` |
-| Rendering | SwiftUI `Canvas` in a `TimelineView(.animation)`; Aurora's glows are pre-rendered once and scaled each frame (`Styles/`) |
+| Rendering | SwiftUI `Canvas` in a `TimelineView(.animation)`; Aurora's glows are pre-rendered once and scaled each frame. Farm rasterizes each 48-column chunk of ground once with Core Text on a whole-pixel grid and scrolls the bitmaps (`Styles/`) |
+| Screenshots | `Screenie --snapshot <style> <seconds> <out.png>` renders a frame offscreen; CI uploads one per style |
 
 ## Testing checklist
 

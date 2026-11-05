@@ -28,7 +28,7 @@ final class AuroraStyle: SaverStyle {
         }
     }
 
-    func draw(_ ctx: inout GraphicsContext, size: CGSize, t: Double) {
+    func draw(_ ctx: inout GraphicsContext, size: CGSize, t: Double, scale: CGFloat) {
         let w = size.width, h = size.height
         ctx.fill(Path(CGRect(origin: .zero, size: size)),
                  with: .color(Color(red: 0.01, green: 0.01, blue: 0.04)))

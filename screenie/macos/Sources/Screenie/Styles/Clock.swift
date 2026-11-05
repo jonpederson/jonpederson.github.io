@@ -9,10 +9,15 @@ final class DriftingClock {
 
     init() {
         vel = CGVector(dx: (Bool.random() ? 1 : -1) * 18.0, dy: (Bool.random() ? 1 : -1) * 13.0)
-        // Follow the system's 12/24-hour preference, without an AM/PM marker (like Linux).
-        let hourPattern = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: .current) ?? ""
-        timeFormatter.dateFormat = hourPattern.contains("a") ? "h:mm" : "HH:mm"
+        timeFormatter.dateFormat = Self.timeFormat(seconds: false)
         dateFormatter.setLocalizedDateFormatFromTemplate("EEEEMMMMd")
+    }
+
+    /// The system's 12/24-hour preference, without an AM/PM marker (like Linux).
+    static func timeFormat(seconds: Bool) -> String {
+        let hourPattern = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: .current) ?? ""
+        let base = hourPattern.contains("a") ? "h:mm" : "HH:mm"
+        return seconds ? base + ":ss" : base
     }
 
     func advance(dt: Double) {

@@ -21,8 +21,8 @@ enum StyleID: String, CaseIterable, Identifiable {
     /// Styles that exist in this build.
     var isAvailable: Bool {
         switch self {
-        case .aurora, .starfield, .black: return true
-        case .farm, .hud, .agents: return false
+        case .aurora, .starfield, .farm, .black: return true
+        case .hud, .agents: return false
         }
     }
 }
