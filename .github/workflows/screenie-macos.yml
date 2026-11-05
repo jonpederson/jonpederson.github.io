@@ -10,6 +10,9 @@ on:
       - "screenie/macos/**"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: macos-latest
@@ -19,10 +22,15 @@ jobs:
       - name: Build Screenie.app
         working-directory: screenie/macos
         run: ./build.sh
-      - name: Zip
+      - name: Package Screenie.dmg
         working-directory: screenie/macos/build
-        run: ditto -c -k --keepParent Screenie.app Screenie.zip
+        run: |
+          rm -rf dmg Screenie.dmg
+          mkdir dmg
+          cp -R Screenie.app dmg/
+          ln -s /Applications dmg/Applications
+          hdiutil create -volname Screenie -srcfolder dmg -ov -format UDZO Screenie.dmg
       - uses: actions/upload-artifact@v4
         with:
           name: Screenie-macOS-arm64
-          path: screenie/macos/build/Screenie.zip
+          path: screenie/macos/build/Screenie.dmg

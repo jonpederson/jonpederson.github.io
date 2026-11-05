@@ -29,6 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let idleItem = NSMenuItem(title: "Start When Idle", action: #selector(toggleIdle), keyEquivalent: "")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if offerToMoveToApplications() { return }  // relaunching from Applications
         buildMainMenu()
         buildStatusItem()
 
@@ -45,8 +46,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // First run: start at every login (as the Linux installer's autostart entry does)
         // and show the settings so it's clear the app is running.
+        // (Only from an Applications folder, so the login item doesn't point into a disk image.)
         let defaults = UserDefaults.standard
-        if !defaults.bool(forKey: "didFirstLaunch") {
+        if !defaults.bool(forKey: "didFirstLaunch") && Self.isInApplicationsFolder {
             defaults.set(true, forKey: "didFirstLaunch")
             LoginItem.set(true)
             openSettings()
@@ -68,6 +70,58 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             default: break
             }
         }
+    }
+
+    // MARK: Install
+
+    private static var isInApplicationsFolder: Bool {
+        let path = Bundle.main.bundleURL.resolvingSymlinksInPath().path
+        return path.hasPrefix("/Applications/") || path.hasPrefix(NSHomeDirectory() + "/Applications/")
+    }
+
+    /// When opened from a disk image or Downloads, offers to copy itself into
+    /// Applications and relaunch from there. Returns true if it's relaunching.
+    private func offerToMoveToApplications() -> Bool {
+        guard !Self.isInApplicationsFolder else { return false }
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = "Move Screenie to your Applications folder?"
+        alert.informativeText = "Screenie needs to be in Applications to start automatically when you log in."
+        alert.addButton(withTitle: "Move to Applications")
+        alert.addButton(withTitle: "Not Now")
+        guard alert.runModal() == .alertFirstButtonReturn else { return false }
+
+        let fm = FileManager.default
+        let source = Bundle.main.bundleURL
+        let candidates = [URL(fileURLWithPath: "/Applications", isDirectory: true),
+                          URL(fileURLWithPath: NSHomeDirectory() + "/Applications", isDirectory: true)]
+        for dir in candidates {
+            let dest = dir.appendingPathComponent("Screenie.app")
+            do {
+                try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+                if fm.fileExists(atPath: dest.path) {
+                    for app in NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
+                    where app != NSRunningApplication.current {
+                        app.terminate()
+                    }
+                    try fm.trashItem(at: dest, resultingItemURL: nil)
+                }
+                try fm.copyItem(at: source, to: dest)
+                let open = Process()
+                open.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+                open.arguments = ["-n", dest.path]
+                try open.run()
+                NSApp.terminate(nil)
+                return true
+            } catch {
+                continue  // e.g. /Applications not writable; try ~/Applications
+            }
+        }
+        let failed = NSAlert()
+        failed.messageText = "Couldn't move Screenie"
+        failed.informativeText = "Drag Screenie into your Applications folder in Finder, then open it from there."
+        failed.runModal()
+        return false
     }
 
     // MARK: Screensaver
