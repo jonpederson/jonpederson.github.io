@@ -2,7 +2,7 @@
 
 A native Swift version of Screenie for Apple Silicon Macs on macOS 14 Sonoma or newer. Like the Linux version, it starts after a set time with no keyboard or mouse input, even while apps like Claude keep the Mac awake. Your apps keep running underneath; Screenie only covers the screen.
 
-This covers **phases 1 to 3** of the port described in [../MAC_PORT.md](../MAC_PORT.md): the menu bar app, idle watcher, global shortcut, settings, one window per display, and the Aurora, Starfield, Farm, HUD and Black styles. Agents comes later.
+This covers all four phases of the port described in [../MAC_PORT.md](../MAC_PORT.md): the menu bar app, idle watcher, global shortcut, settings, one window per display, and all six styles (Aurora, Starfield, Farm, HUD, Agents and Black).
 
 ## Download
 
@@ -29,9 +29,10 @@ To build without installing, run `./build.sh`. CI (`.github/workflows/screenie-m
 - **Settings:** choose **Settings…** from the menu bar icon, or open Screenie again from Finder or Spotlight
   - start when idle (on/off) and the idle time in minutes
   - the keyboard shortcut (click **Change**, press the new keys; Esc cancels, Delete turns it off)
-  - style: Aurora, Starfield, Farm (an endless ASCII farm seen from a drone flying over it), HUD (a dashboard of live data; see the [Linux README](../README.md#hud-style) for every panel and source) or Black
+  - style: Aurora, Starfield, Farm (an endless ASCII farm seen from a drone flying over it), HUD (a dashboard of live data; see the [Linux README](../README.md#hud-style) for every panel and source), Agents (mission control for the Claude Code agents on this Mac; see the [Linux README](../README.md#agents-style)) or Black
   - a clock that drifts so it won't burn in (Farm and HUD show the time themselves)
   - HUD: your exact location (otherwise estimated from your IP address) and units
+  - Agents: show task titles and file names, or anonymous stats only (prompts, code and command text are never shown)
   - require password to dismiss: shows the login window when you come back
   - open at login
 - **From scripts:** `open screenie://show` starts it; `open screenie://settings` opens settings
@@ -68,6 +69,8 @@ Add `--purge` to also delete your settings.
 | Rendering | SwiftUI `Canvas` in a `TimelineView(.animation)`; Aurora's glows are pre-rendered once and scaled each frame. Farm rasterizes each 48-column chunk of ground once with Core Text on a whole-pixel grid and scrolls the bitmaps (`Styles/`) |
 | HUD data | Each source is polled on its own interval in the background while a HUD is on screen (`Styles/HUD/HudData.swift`); slow-changing data is cached in `~/Library/Caches/Screenie/hud.json`. Panels, the radar scope base, the verse and the seismograph trace are cached as bitmaps and refreshed one per frame |
 | HUD video | Traffic cameras play through `AVPlayer` (HLS in MPEG-TS) and are drawn frame by frame; NASA's live ISS stream is YouTube's embedded player in a `WKWebView` that ignores input |
+| Agents data | Tails `~/.claude/sessions` and `~/.claude/projects` on a background queue, samples `ps` for CPU, memory and child processes, and reads git state every 20 s (with optional locks off, and only if a real git is installed, so no developer-tools prompt). `SCREENIE_CLAUDE_DIR` points it at another folder; CI uses that with `tools/agents_demo.py` for its screenshot |
+| Diagnostics | Show, dismiss and display events go to the unified log: `log stream --predicate 'subsystem == "local.screenie.Screenie"'` |
 | Screenshots | `Screenie --snapshot <style> <seconds> <out.png>` renders a frame offscreen; CI uploads one per style |
 
 ## Testing checklist
@@ -78,4 +81,5 @@ Add `--purge` to also delete your settings.
 - [ ] Key, click, scroll or mouse movement dismisses it; with "require password" on, the login window appears
 - [ ] Launch at login works after a reboot
 - [ ] Each style renders smoothly on a Retina display
+- [ ] Agents: finds the Claude Code sessions on the Mac
 - [ ] HUD: cameras play live, the ISS stream plays and doesn't swallow input, and every panel fills in

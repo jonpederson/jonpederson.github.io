@@ -206,7 +206,6 @@ final class AgentsStyle: SaverStyle {
         p.text("AGENTS", x, y - h * 0.08, Self.c(Self.ACCENT), fHuge)
         var sub = "MISSION CONTROL · \(host) · \(Self.clock.string(from: Date()))"
         if !s.others.isEmpty { sub += " · also running: " + s.others.joined(separator: ", ") }
-        p.text(sub, x, y + h * 0.58, Self.c(Self.DIM), fLabel)
 
         let today = s.today
         let total = ["input", "cache_write", "cache_read", "output"].reduce(0) { $0 + (today[$1] ?? 0) }
@@ -231,6 +230,8 @@ final class AgentsStyle: SaverStyle {
             right -= max(vw, lw) + gap
             if right < x + w * 0.3 { break }
         }
+        // The subtitle gets whatever room the tiles left, so a long host name can't run into them.
+        p.text(sub, x, y + h * 0.58, Self.c(Self.DIM), fLabel, width: max(right + gap * 0.5 - x, h))
         p.fill(x, y + h, w, 1, Self.c(Self.FAINT))
     }
 
@@ -485,8 +486,10 @@ final class AgentsStyle: SaverStyle {
                                              ("SUBAGENTS", "\(a.subagents)"), ("FILES", "\(a.files)")]
             let cw = inner / CGFloat(stats.count)
             for (i, (lab, val)) in stats.enumerated() {
-                p.text(lab, x + CGFloat(i) * cw, y + lh * 0.08, Self.c(Self.DIM), fL)
-                let lw = Painter.measure(lab + " ", fL).width
+                // In a narrow card the label gives way (ellipsized) so the number always shows.
+                let vw = Painter.measure(val, fV).width
+                let lw = min(Painter.measure(lab + " ", fL).width, max(cw - vw - lh * 0.35, lh))
+                p.text(lab, x + CGFloat(i) * cw, y + lh * 0.08, Self.c(Self.DIM), fL, width: lw)
                 p.text(val, x + CGFloat(i) * cw + lw, y, Self.c(lab == "ERRORS" && a.errors > 0 ? Self.WARN : Self.TEXT), fV)
             }
             y += lh
