@@ -40,6 +40,7 @@ final class IdleWatcher: NSObject {
             fired = false
         } else if cfg.enabled && !fired && !isShowing() && !Self.screenLocked() {
             fired = true
+            saverLog.notice("idle for \(Int(idle)) s: starting")
             fire()
         }
     }

@@ -1,5 +1,8 @@
 import AppKit
+import os
 import SwiftUI
+
+let saverLog = Logger(subsystem: "local.screenie.Screenie", category: "saver")
 
 /// A borderless window covering one display, above the menu bar and Dock.
 /// Native fullscreen is avoided on purpose: it animates into a new Space.
@@ -32,7 +35,8 @@ final class SaverController: NSObject {
     /// Called after the screensaver has gone away.
     var onDismissed: (() -> Void)?
 
-    private var windows: [SaverWindow] = []
+    /// One window per display, keyed by display ID.
+    private var windows: [CGDirectDisplayID: SaverWindow] = [:]
     private var monitors: [Any] = []
     private var config = Config()
     private var shownAt: TimeInterval = 0
@@ -51,34 +55,57 @@ final class SaverController: NSObject {
         motionOrigin = nil
         lastFlags = NSEvent.modifierFlags
 
+        saverLog.notice("show: style \(config.style, privacy: .public), \(NSScreen.screens.count) display(s)")
         NSApp.activate(ignoringOtherApps: true)
-        makeWindows()
+        syncWindows()
         installMonitors()
         NSCursor.hide()
         cursorHidden = true
 
-        let nc = NotificationCenter.default
-        nc.addObserver(self, selector: #selector(screensChanged),
-                       name: NSApplication.didChangeScreenParametersNotification, object: nil)
-        nc.addObserver(self, selector: #selector(resignedActive),
-                       name: NSApplication.didResignActiveNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(screensChanged),
+                                               name: NSApplication.didChangeScreenParametersNotification, object: nil)
     }
 
-    private func makeWindows() {
-        let screens = NSScreen.screens
-        for screen in screens {
-            let w = SaverWindow(screen: screen, config: config)
-            windows.append(w)
-            w.orderFrontRegardless()
+    private static func displayID(_ screen: NSScreen) -> CGDirectDisplayID? {
+        (screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
+    }
+
+    /// Makes the windows match the displays: adds and removes windows only for displays
+    /// that appeared or went away, and moves or resizes the rest in place, so the
+    /// animation never restarts. (macOS posts screen-parameter changes for many things
+    /// that aren't display changes, such as menu bar and Dock visibility.)
+    private func syncWindows() {
+        var seen: Set<CGDirectDisplayID> = []
+        for screen in NSScreen.screens {
+            guard let id = Self.displayID(screen) else { continue }
+            seen.insert(id)
+            if let w = windows[id] {
+                if w.frame != screen.frame {
+                    saverLog.notice("display \(id) moved or resized to \(screen.frame.debugDescription, privacy: .public)")
+                    w.setFrame(screen.frame, display: true)
+                }
+            } else {
+                let w = SaverWindow(screen: screen, config: config)
+                windows[id] = w
+                w.orderFrontRegardless()
+            }
+        }
+        for (id, w) in windows where !seen.contains(id) {
+            saverLog.notice("display \(id) went away")
+            w.orderOut(nil)
+            w.close()
+            windows[id] = nil
         }
         // Keyboard focus goes to the display with the mouse on it.
-        let mouse = NSEvent.mouseLocation
-        let keyWindow = windows.first { NSMouseInRect(mouse, $0.frame, false) } ?? windows.first
-        keyWindow?.makeKeyAndOrderFront(nil)
+        if !windows.values.contains(where: \.isKeyWindow) {
+            let mouse = NSEvent.mouseLocation
+            let key = windows.values.first { NSMouseInRect(mouse, $0.frame, false) } ?? windows.values.first
+            key?.makeKeyAndOrderFront(nil)
+        }
     }
 
     private func closeWindows() {
-        for w in windows {
+        for w in windows.values {
             w.orderOut(nil)
             w.close()
         }
@@ -87,13 +114,8 @@ final class SaverController: NSObject {
 
     @objc private func screensChanged() {
         guard isShowing, !dismissing else { return }
-        closeWindows()
-        makeWindows()
-    }
-
-    @objc private func resignedActive() {
-        // Something took focus (e.g. ⌘-Tab); don't leave an invisible wall over it.
-        dismiss()
+        saverLog.notice("screen parameters changed")
+        syncWindows()
     }
 
     private func installMonitors() {
@@ -134,20 +156,21 @@ final class SaverController: NSObject {
                 motionOrigin = p
                 return
             }
-            if hypot(p.x - origin.x, p.y - origin.y) > Self.motionThreshold { dismiss() }
+            if hypot(p.x - origin.x, p.y - origin.y) > Self.motionThreshold { dismiss(reason: "mouse moved") }
         case .flagsChanged:
             // Pressing a modifier dismisses; releasing one (the shortcut's keys) doesn't.
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
             let pressed = !flags.subtracting(lastFlags).intersection(Shortcut.relevantModifiers).isEmpty
             lastFlags = flags
-            if pressed { dismiss() }
+            if pressed { dismiss(reason: "modifier key") }
         default:
-            dismiss()
+            dismiss(reason: "\(event.type.rawValue)")
         }
     }
 
-    func dismiss() {
+    func dismiss(reason: String = "requested") {
         guard isShowing, !inGrace, !dismissing else { return }
+        saverLog.notice("dismiss: \(reason, privacy: .public)")
         dismissing = true
         if config.lockOnDismiss {
             ScreenLock.lockNow()
