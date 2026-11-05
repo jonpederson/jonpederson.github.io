@@ -31,6 +31,15 @@ To build without installing, run `./build.sh`. CI (`.github/workflows/screenie-m
 
 Settings are saved to `~/Library/Application Support/Screenie/config.json`, with the same keys as the Linux `config.json`. A Linux shortcut such as `<Control><Super>s` is read as ⌃⌘S. Settings take effect right away.
 
+## If macOS says "Screenie" Not Opened
+
+Screenie isn't notarized by Apple (that needs a paid Apple Developer account), so the first time you open it macOS shows **"Screenie" Not Opened**. Click **Done**, then either:
+
+- open **System Settings > Privacy & Security**, scroll to **Security**, click **Open Anyway** next to the Screenie message, and confirm with your password; or
+- run `xattr -dr com.apple.quarantine /Applications/Screenie.app` in Terminal, then open it again.
+
+You only need to do this once per download.
+
 ## Uninstall
 
 ```bash

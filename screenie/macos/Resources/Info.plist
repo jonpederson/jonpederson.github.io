@@ -24,6 +24,8 @@
     <array>
         <string>arm64</string>
     </array>
+    <key>CFBundleIconFile</key>
+    <string>Screenie</string>
     <key>LSUIElement</key>
     <true/>
     <key>LSApplicationCategoryType</key>
